@@ -132,7 +132,6 @@ export function Sidebar({
 
   const handleDeviceSelect = (deviceId: string) => {
     onSelectDevice(deviceId);
-    navigate(`/devices/${deviceId}`);
     onClose();
   };
 
@@ -380,14 +379,33 @@ export function Sidebar({
           </div>
 
           <div className="border-t border-sidebar-border p-4">
-            <div className="rounded-lg bg-sidebar-accent p-3">
-              <p className="text-xs font-medium text-sidebar-accent-foreground">
-                Sistema Online
-              </p>
-              <p className="text-xs text-sidebar-accent-foreground/70 mt-1">
-                Última sincronização: há 2 min
-              </p>
-            </div>
+            {selectedDevice ? (
+              <div className="rounded-lg bg-primary/10 p-3">
+                <p className="text-xs font-medium text-primary">
+                  Dispositivo Selecionado:
+                </p>
+                <p className="text-xs text-primary/80 font-medium mt-1">
+                  {getSelectedDeviceName()}
+                </p>
+                <p className="text-xs text-primary/60 mt-1">
+                  {(() => {
+                    const device = getAllDevices().find(
+                      (d) => d.id === selectedDevice,
+                    );
+                    return device ? `${device.model} • ${device.ip}` : "";
+                  })()}
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-lg bg-sidebar-accent p-3">
+                <p className="text-xs font-medium text-sidebar-accent-foreground">
+                  Sistema Online
+                </p>
+                <p className="text-xs text-sidebar-accent-foreground/70 mt-1">
+                  Última sincronização: há 2 min
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </aside>

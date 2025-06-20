@@ -9,7 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Repositories from "./pages/Repositories";
 import Devices from "./pages/Devices";
 import RepositoryDetail from "./pages/RepositoryDetail";
-import DeviceDetail from "./pages/DeviceDetail";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -73,17 +73,7 @@ const App = () => {
                   />
                 }
               />
-              <Route
-                path="/devices/:id"
-                element={
-                  <DeviceDetail
-                    selectedRepository={selectedRepository}
-                    selectedDevice={selectedDevice}
-                    onSelectRepository={setSelectedRepository}
-                    onSelectDevice={setSelectedDevice}
-                  />
-                }
-              />
+
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

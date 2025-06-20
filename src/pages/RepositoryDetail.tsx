@@ -436,7 +436,7 @@ export default function RepositoryDetail({
 
           {/* Instrumentation Tab */}
           <TabsContent value="instrumentation" className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h3 className="text-lg font-semibold">Instrumentação</h3>
                 <p className="text-sm text-muted-foreground">
@@ -444,10 +444,24 @@ export default function RepositoryDetail({
                   e comparadores
                 </p>
               </div>
-              <Button onClick={() => setShowInstrumentationForm(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nova Instrumentação
-              </Button>
+              <div className="flex items-center space-x-2">
+                <select className="px-3 py-2 border border-border rounded-md text-sm bg-background">
+                  <option value="">Todos os tipos</option>
+                  <option value="linear">Linear</option>
+                  <option value="quantification">Quantificação</option>
+                </select>
+                <select className="px-3 py-2 border border-border rounded-md text-sm bg-background">
+                  <option value="">Todos comparadores</option>
+                  <option value="greater">Maior que</option>
+                  <option value="less">Menor que</option>
+                  <option value="equal">Igual a</option>
+                  <option value="range">Intervalo</option>
+                </select>
+                <Button onClick={() => setShowInstrumentationForm(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nova Instrumentação
+                </Button>
+              </div>
             </div>
 
             {instrumentations.length === 0 ? (

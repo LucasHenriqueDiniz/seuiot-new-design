@@ -34,6 +34,7 @@ interface GraphData {
   type: "operation" | "instrumentation";
   sourceId: string;
   order: number;
+  chartType: "bar" | "line" | "pie" | "gauge" | "area";
 }
 
 interface GraphsTabProps {
@@ -48,6 +49,7 @@ const initialGraphs: GraphData[] = [
     type: "operation",
     sourceId: "joystick_y_001",
     order: 1,
+    chartType: "bar",
   },
   {
     id: "graph_2",
@@ -55,6 +57,7 @@ const initialGraphs: GraphData[] = [
     type: "operation",
     sourceId: "temp_sensor_002",
     order: 2,
+    chartType: "line",
   },
   {
     id: "graph_3",
@@ -62,6 +65,15 @@ const initialGraphs: GraphData[] = [
     type: "instrumentation",
     sourceId: "temp_monitor_001",
     order: 3,
+    chartType: "gauge",
+  },
+  {
+    id: "graph_4",
+    title: "Distribuição de Status",
+    type: "instrumentation",
+    sourceId: "status_dist_001",
+    order: 4,
+    chartType: "pie",
   },
 ];
 
@@ -145,10 +157,192 @@ export function GraphsTab({ operations, instrumentations }: GraphsTabProps) {
     return points;
   };
 
+  const renderChart = (graph: GraphData, data: number[]) => {
+    const maxValue = Math.max(...data);
+    const avgValue = data.reduce((sum, val) => sum + val, 0) / data.length;
+
+    switch (graph.chartType) {
+      case "line":
+        return (
+          <div className="h-32 relative">
+            <svg
+              className="w-full h-full"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+            >
+              <polyline
+                fill="none"
+                stroke="rgb(59, 130, 246)"
+                strokeWidth="2"
+                vectorEffect="non-scaling-stroke"
+                points={data
+                  .map(
+                    (value, i) =>
+                      `${(i / (data.length - 1)) * 100},${100 - value}`,
+                  )
+                  .join(" ")}
+              />
+            </svg>
+          </div>
+        );
+
+      case "pie":
+        const segments = [
+          { value: 45, color: "rgb(59, 130, 246)" },
+          { value: 30, color: "rgb(16, 185, 129)" },
+          { value: 25, color: "rgb(249, 115, 22)" },
+        ];
+        let cumulativePercentage = 0;
+        return (
+          <div className="h-32 flex items-center justify-center">
+            <svg className="w-24 h-24" viewBox="0 0 42 42">
+              {segments.map((segment, i) => {
+                const strokeDasharray = `${segment.value} ${100 - segment.value}`;
+                const strokeDashoffset = -cumulativePercentage;
+                cumulativePercentage += segment.value;
+                return (
+                  <circle
+                    key={i}
+                    cx="21"
+                    cy="21"
+                    r="15.915"
+                    fill="transparent"
+                    stroke={segment.color}
+                    strokeWidth="3"
+                    strokeDasharray={strokeDasharray}
+                    strokeDashoffset={strokeDashoffset}
+                    transform="rotate(-90 21 21)"
+                  />
+                );
+              })}
+            </svg>
+          </div>
+        );
+
+      case "gauge":
+        const gaugeValue = avgValue;
+        const angle = (gaugeValue / 100) * 180 - 90;
+        return (
+          <div className="h-32 flex items-center justify-center">
+            <div className="relative w-24 h-12">
+              <svg className="w-full h-full" viewBox="0 0 100 50">
+                <path
+                  d="M 10 40 A 30 30 0 0 1 90 40"
+                  fill="none"
+                  stroke="rgb(229, 231, 235)"
+                  strokeWidth="8"
+                />
+                <path
+                  d="M 10 40 A 30 30 0 0 1 90 40"
+                  fill="none"
+                  stroke="rgb(59, 130, 246)"
+                  strokeWidth="8"
+                  strokeDasharray={`${(gaugeValue / 100) * 125} 125`}
+                />
+                <line
+                  x1="50"
+                  y1="40"
+                  x2={50 + 25 * Math.cos((angle * Math.PI) / 180)}
+                  y2={40 + 25 * Math.sin((angle * Math.PI) / 180)}
+                  stroke="rgb(239, 68, 68)"
+                  strokeWidth="2"
+                />
+              </svg>
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 text-xs font-bold">
+                {gaugeValue.toFixed(1)}
+              </div>
+            </div>
+          </div>
+        );
+
+      case "area":
+        return (
+          <div className="h-32 relative">
+            <svg
+              className="w-full h-full"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+            >
+              <defs>
+                <linearGradient
+                  id={`gradient-${graph.id}`}
+                  x1="0%"
+                  y1="0%"
+                  x2="0%"
+                  y2="100%"
+                >
+                  <stop
+                    offset="0%"
+                    stopColor="rgb(59, 130, 246)"
+                    stopOpacity="0.3"
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor="rgb(59, 130, 246)"
+                    stopOpacity="0.1"
+                  />
+                </linearGradient>
+              </defs>
+              <polygon
+                fill={`url(#gradient-${graph.id})`}
+                points={`0,100 ${data.map((value, i) => `${(i / (data.length - 1)) * 100},${100 - value}`).join(" ")} 100,100`}
+              />
+              <polyline
+                fill="none"
+                stroke="rgb(59, 130, 246)"
+                strokeWidth="2"
+                vectorEffect="non-scaling-stroke"
+                points={data
+                  .map(
+                    (value, i) =>
+                      `${(i / (data.length - 1)) * 100},${100 - value}`,
+                  )
+                  .join(" ")}
+              />
+            </svg>
+          </div>
+        );
+
+      default: // bar chart
+        return (
+          <div className="h-32 relative">
+            <div className="absolute inset-0 flex items-end justify-between">
+              {data.map((value, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "bg-primary rounded-t-sm transition-all duration-300",
+                    "min-w-[2px] flex-1 mx-[1px]",
+                    isPaused && "bg-gray-400",
+                  )}
+                  style={{ height: `${value}%` }}
+                />
+              ))}
+            </div>
+          </div>
+        );
+    }
+  };
+
   const GraphCard = ({ graph }: { graph: GraphData }) => {
     const data = generateMockData(graph.title);
     const maxValue = Math.max(...data);
     const avgValue = data.reduce((sum, val) => sum + val, 0) / data.length;
+
+    const getChartTypeIcon = (type: string) => {
+      switch (type) {
+        case "line":
+          return "📈";
+        case "pie":
+          return "🥧";
+        case "gauge":
+          return "⏱️";
+        case "area":
+          return "📊";
+        default:
+          return "📊";
+      }
+    };
 
     return (
       <Card
@@ -169,9 +363,14 @@ export function GraphsTab({ operations, instrumentations }: GraphsTabProps) {
                 <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
               )}
               <CardTitle className="text-sm">{graph.title}</CardTitle>
-              <Badge variant="outline" className="text-xs">
-                {graph.type}
-              </Badge>
+              <div className="flex items-center space-x-1">
+                <Badge variant="outline" className="text-xs">
+                  {graph.type}
+                </Badge>
+                <span className="text-xs" title={graph.chartType}>
+                  {getChartTypeIcon(graph.chartType)}
+                </span>
+              </div>
             </div>
 
             <div className="flex items-center space-x-1">
@@ -212,21 +411,7 @@ export function GraphsTab({ operations, instrumentations }: GraphsTabProps) {
         </CardHeader>
 
         <CardContent>
-          <div className="h-32 relative">
-            <div className="absolute inset-0 flex items-end justify-between">
-              {data.map((value, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    "bg-primary rounded-t-sm transition-all duration-300",
-                    "min-w-[2px] flex-1 mx-[1px]",
-                    isPaused && "bg-gray-400",
-                  )}
-                  style={{ height: `${value}%` }}
-                />
-              ))}
-            </div>
-          </div>
+          {renderChart(graph, data)}
 
           <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
             <div className="text-center">
