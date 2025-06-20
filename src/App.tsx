@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,30 +9,89 @@ import Dashboard from "./pages/Dashboard";
 import Repositories from "./pages/Repositories";
 import Devices from "./pages/Devices";
 import RepositoryDetail from "./pages/RepositoryDetail";
+import DeviceDetail from "./pages/DeviceDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/repositories" element={<Repositories />} />
-            <Route path="/repositories/:id" element={<RepositoryDetail />} />
-            <Route path="/devices" element={<Devices />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [selectedRepository, setSelectedRepository] = useState<string | null>(
+    null,
+  );
+  const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <Dashboard
+                    selectedRepository={selectedRepository}
+                    selectedDevice={selectedDevice}
+                    onSelectRepository={setSelectedRepository}
+                    onSelectDevice={setSelectedDevice}
+                  />
+                }
+              />
+              <Route
+                path="/repositories"
+                element={
+                  <Repositories
+                    selectedRepository={selectedRepository}
+                    selectedDevice={selectedDevice}
+                    onSelectRepository={setSelectedRepository}
+                    onSelectDevice={setSelectedDevice}
+                  />
+                }
+              />
+              <Route
+                path="/repositories/:id"
+                element={
+                  <RepositoryDetail
+                    selectedRepository={selectedRepository}
+                    selectedDevice={selectedDevice}
+                    onSelectRepository={setSelectedRepository}
+                    onSelectDevice={setSelectedDevice}
+                  />
+                }
+              />
+              <Route
+                path="/devices"
+                element={
+                  <Devices
+                    selectedRepository={selectedRepository}
+                    selectedDevice={selectedDevice}
+                    onSelectRepository={setSelectedRepository}
+                    onSelectDevice={setSelectedDevice}
+                  />
+                }
+              />
+              <Route
+                path="/devices/:id"
+                element={
+                  <DeviceDetail
+                    selectedRepository={selectedRepository}
+                    selectedDevice={selectedDevice}
+                    onSelectRepository={setSelectedRepository}
+                    onSelectDevice={setSelectedDevice}
+                  />
+                }
+              />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

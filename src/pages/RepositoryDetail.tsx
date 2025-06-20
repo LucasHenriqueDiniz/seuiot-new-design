@@ -1,17 +1,10 @@
 import { useState } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -20,22 +13,28 @@ import {
 } from "@/components/ui/dialog";
 import {
   Database,
-  Cpu,
   Activity,
   BarChart3,
   Settings,
-  Play,
-  Pause,
-  RefreshCw,
-  AlertTriangle,
   Plus,
+  RefreshCw,
 } from "lucide-react";
 import {
-  Control,
-  ControlForm,
-  ControlChart,
-  ControlConfig,
-} from "@/components/controls/Control";
+  Operation,
+  OperationForm,
+  OperationConfig,
+} from "@/components/operations/Operation";
+import {
+  ControlNew,
+  ControlNewForm,
+  ControlNewConfig,
+} from "@/components/controls/ControlNew";
+import {
+  Instrumentation,
+  InstrumentationForm,
+  InstrumentationConfig,
+} from "@/components/instrumentation/Instrumentation";
+import { ControlChart } from "@/components/controls/Control";
 
 // Mock data - in real app this would come from API
 const repositoryData = {
@@ -75,7 +74,7 @@ const mockOperations = [
   },
 ];
 
-const initialControls: ControlConfig[] = [
+const initialOperations: OperationConfig[] = [
   {
     id: "joystick_y_001",
     name: "Joystick Y",
@@ -87,10 +86,11 @@ const initialControls: ControlConfig[] = [
     currentValue: 33,
     type: "analog",
     status: "active",
+    description: "Controle de entrada analógica para joystick Y",
   },
   {
-    id: "temp_control_002",
-    name: "Controle de Temperatura",
+    id: "temp_sensor_002",
+    name: "Sensor de Temperatura",
     pinName: "GPIO_25",
     bitWidth: 12,
     attenuation: 3,
@@ -99,38 +99,127 @@ const initialControls: ControlConfig[] = [
     currentValue: 67,
     type: "analog",
     status: "active",
-  },
-  {
-    id: "pump_speed_003",
-    name: "Velocidade da Bomba",
-    pinName: "GPIO_18",
-    bitWidth: 8,
-    attenuation: 0,
-    sampleCount: 32,
-    period: 500,
-    currentValue: 85,
-    type: "pwm",
-    status: "inactive",
+    description: "Sensor de temperatura ambiente",
   },
 ];
 
-export default function RepositoryDetail() {
+const initialControls: ControlNewConfig[] = [
+  {
+    id: "temp_control_001",
+    name: "Controle de Temperatura",
+    type: "actuator",
+    controlType: "pid",
+    operationMode: "continuous",
+    referenceValue: 25.0,
+    saveToFlash: true,
+    currentValue: 23.5,
+    status: "active",
+    pidKp: 1.0,
+    pidKi: 0.1,
+    pidKd: 0.01,
+  },
+  {
+    id: "flow_sensor_002",
+    name: "Sensor de Fluxo",
+    type: "sensor",
+    controlType: "raw",
+    operationMode: "continuous",
+    referenceValue: 0,
+    saveToFlash: false,
+    currentValue: 45.2,
+    status: "active",
+  },
+];
+
+const initialInstrumentations: InstrumentationConfig[] = [
+  {
+    id: "temp_monitor_001",
+    name: "Monitor de Temperatura",
+    sensorOperation: "temp_sensor_002",
+    useRawData: true,
+    type: "linear",
+    comparatorType: "range",
+    rangeMin: 20,
+    rangeMax: 30,
+    linearScale: 1.0,
+    linearOffset: 0,
+    currentValue: 24.5,
+    status: "active",
+  },
+];
+
+interface RepositoryDetailProps {
+  selectedRepository: string | null;
+  selectedDevice: string | null;
+  onSelectRepository: (repoId: string | null) => void;
+  onSelectDevice: (deviceId: string | null) => void;
+}
+
+export default function RepositoryDetail({
+  selectedRepository,
+  selectedDevice,
+  onSelectRepository,
+  onSelectDevice,
+}: RepositoryDetailProps) {
   const { id } = useParams();
-  const [searchParams] = useSearchParams();
-  const [selectedDevice, setSelectedDevice] = useState(
-    searchParams.get("device") || "all",
-  );
-  const [controls, setControls] = useState<ControlConfig[]>(initialControls);
+
+  // Operations state
+  const [operations, setOperations] =
+    useState<OperationConfig[]>(initialOperations);
+  const [showOperationForm, setShowOperationForm] = useState(false);
+  const [editingOperation, setEditingOperation] =
+    useState<OperationConfig | null>(null);
+
+  // Controls state
+  const [controls, setControls] = useState<ControlNewConfig[]>(initialControls);
   const [showControlForm, setShowControlForm] = useState(false);
-  const [showControlChart, setShowControlChart] = useState(false);
-  const [editingControl, setEditingControl] = useState<ControlConfig | null>(
+  const [editingControl, setEditingControl] = useState<ControlNewConfig | null>(
     null,
   );
-  const [chartControl, setChartControl] = useState<ControlConfig | null>(null);
+
+  // Instrumentations state
+  const [instrumentations, setInstrumentations] = useState<
+    InstrumentationConfig[]
+  >(initialInstrumentations);
+  const [showInstrumentationForm, setShowInstrumentationForm] = useState(false);
+  const [editingInstrumentation, setEditingInstrumentation] =
+    useState<InstrumentationConfig | null>(null);
+
+  // Chart state
+  const [showChart, setShowChart] = useState(false);
+  const [chartData, setChartData] = useState<any>(null);
 
   const repository = repositoryData.example1; // In real app, fetch by id
 
-  const handleSaveControl = (control: ControlConfig) => {
+  // Operations handlers
+  const handleSaveOperation = (operation: OperationConfig) => {
+    if (editingOperation) {
+      setOperations(
+        operations.map((o) => (o.id === operation.id ? operation : o)),
+      );
+    } else {
+      setOperations([...operations, operation]);
+    }
+    setShowOperationForm(false);
+    setEditingOperation(null);
+  };
+
+  const handleEditOperation = (operation: OperationConfig) => {
+    setEditingOperation(operation);
+    setShowOperationForm(true);
+  };
+
+  const handleDeleteOperation = (id: string) => {
+    setOperations(operations.filter((o) => o.id !== id));
+  };
+
+  const handleViewOperationChart = (operation: OperationConfig) => {
+    setChartData(operation);
+    setShowChart(true);
+  };
+
+  // Controls handlers
+  const handleSaveControl = (control: ControlNewConfig) => {
     if (editingControl) {
       setControls(controls.map((c) => (c.id === control.id ? control : c)));
     } else {
@@ -140,7 +229,7 @@ export default function RepositoryDetail() {
     setEditingControl(null);
   };
 
-  const handleEditControl = (control: ControlConfig) => {
+  const handleEditControl = (control: ControlNewConfig) => {
     setEditingControl(control);
     setShowControlForm(true);
   };
@@ -149,23 +238,49 @@ export default function RepositoryDetail() {
     setControls(controls.filter((c) => c.id !== id));
   };
 
-  const handleViewChart = (control: ControlConfig) => {
-    setChartControl(control);
-    setShowControlChart(true);
+  // Instrumentations handlers
+  const handleSaveInstrumentation = (
+    instrumentation: InstrumentationConfig,
+  ) => {
+    if (editingInstrumentation) {
+      setInstrumentations(
+        instrumentations.map((i) =>
+          i.id === instrumentation.id ? instrumentation : i,
+        ),
+      );
+    } else {
+      setInstrumentations([...instrumentations, instrumentation]);
+    }
+    setShowInstrumentationForm(false);
+    setEditingInstrumentation(null);
   };
 
-  const closeControlForm = () => {
-    setShowControlForm(false);
-    setEditingControl(null);
+  const handleEditInstrumentation = (
+    instrumentation: InstrumentationConfig,
+  ) => {
+    setEditingInstrumentation(instrumentation);
+    setShowInstrumentationForm(true);
   };
 
-  const closeControlChart = () => {
-    setShowControlChart(false);
-    setChartControl(null);
+  const handleDeleteInstrumentation = (id: string) => {
+    setInstrumentations(instrumentations.filter((i) => i.id !== id));
+  };
+
+  const handleViewInstrumentationChart = (
+    instrumentation: InstrumentationConfig,
+  ) => {
+    setChartData(instrumentation);
+    setShowChart(true);
   };
 
   return (
-    <Layout title={repository.name}>
+    <Layout
+      title={repository.name}
+      selectedRepository={selectedRepository}
+      selectedDevice={selectedDevice}
+      onSelectRepository={onSelectRepository}
+      onSelectDevice={onSelectDevice}
+    >
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -185,33 +300,10 @@ export default function RepositoryDetail() {
           </div>
 
           <div className="flex items-center space-x-2">
-            <Select value={selectedDevice} onValueChange={setSelectedDevice}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Selecionar dispositivo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os dispositivos</SelectItem>
-                {repository.devices.map((device) => (
-                  <SelectItem key={device.id} value={device.id.toString()}>
-                    {device.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <Button variant="outline">
               <RefreshCw className="h-4 w-4 mr-2" />
               Sincronizar
             </Button>
-            {selectedDevice !== "all" && (
-              <Badge variant="outline" className="ml-2">
-                Dispositivo:{" "}
-                {
-                  repository.devices.find(
-                    (d) => d.id.toString() === selectedDevice,
-                  )?.name
-                }
-              </Badge>
-            )}
           </div>
         </div>
 
@@ -240,126 +332,68 @@ export default function RepositoryDetail() {
               value="instrumentation"
               className="flex items-center space-x-2"
             >
-              <Cpu className="h-4 w-4" />
+              <BarChart3 className="h-4 w-4" />
               <span>Instrumentação</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Operations Tab */}
           <TabsContent value="operations" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-2">
-                    <Activity className="h-5 w-5 text-green-600" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Operações Ativas
-                      </p>
-                      <p className="text-2xl font-bold">3</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-2">
-                    <Cpu className="h-5 w-5 text-blue-600" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Dispositivos
-                      </p>
-                      <p className="text-2xl font-bold">
-                        {repository.devices.length}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-2">
-                    <BarChart3 className="h-5 w-5 text-purple-600" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Taxa de Sucesso
-                      </p>
-                      <p className="text-2xl font-bold">94.2%</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Operações</h3>
+                <p className="text-sm text-muted-foreground">
+                  Configure e monitore operações como Joystick Y, sensores e
+                  controles
+                </p>
+              </div>
+              <Button onClick={() => setShowOperationForm(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Operação
+              </Button>
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Operações em Execução</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {mockOperations.map((operation) => (
-                    <div
-                      key={operation.id}
-                      className="flex items-center justify-between p-4 border rounded-lg"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <Activity className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <h3 className="font-medium">{operation.name}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {operation.devices} dispositivos envolvidos
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-4">
-                        <div className="text-right">
-                          <Badge
-                            variant={
-                              operation.status === "Executando"
-                                ? "default"
-                                : "secondary"
-                            }
-                          >
-                            {operation.status}
-                          </Badge>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {operation.progress}% completo
-                          </p>
-                        </div>
-
-                        <div className="flex space-x-1">
-                          {operation.status === "Executando" ? (
-                            <Button variant="outline" size="sm">
-                              <Pause className="h-4 w-4" />
-                            </Button>
-                          ) : (
-                            <Button variant="outline" size="sm">
-                              <Play className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            {operations.length === 0 ? (
+              <Card>
+                <CardContent className="py-8">
+                  <div className="text-center">
+                    <Activity className="h-8 w-8 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-lg font-semibold mb-2">
+                      Nenhuma operação configurada
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      Crie sua primeira operação para começar a monitorar
+                      dispositivos
+                    </p>
+                    <Button onClick={() => setShowOperationForm(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Criar Primeira Operação
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {operations.map((operation) => (
+                  <Operation
+                    key={operation.id}
+                    operation={operation}
+                    onEdit={handleEditOperation}
+                    onDelete={handleDeleteOperation}
+                    onViewChart={handleViewOperationChart}
+                  />
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           {/* Control Tab */}
           <TabsContent value="control" className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold">
-                  Controles de Dispositivo
-                </h3>
+                <h3 className="text-lg font-semibold">Controles</h3>
                 <p className="text-sm text-muted-foreground">
-                  Configure e monitore os controles analógicos e digitais
+                  Sensores e Atuadores com controle Bruto, Operação ou PID
                 </p>
               </div>
               <Button onClick={() => setShowControlForm(true)}>
@@ -377,8 +411,8 @@ export default function RepositoryDetail() {
                       Nenhum controle configurado
                     </h3>
                     <p className="text-muted-foreground mb-4">
-                      Crie seu primeiro controle para começar a monitorar
-                      dispositivos
+                      Crie controles para sensores e atuadores com diferentes
+                      tipos
                     </p>
                     <Button onClick={() => setShowControlForm(true)}>
                       <Plus className="h-4 w-4 mr-2" />
@@ -390,47 +424,15 @@ export default function RepositoryDetail() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {controls.map((control) => (
-                  <Control
+                  <ControlNew
                     key={control.id}
                     control={control}
                     onEdit={handleEditControl}
                     onDelete={handleDeleteControl}
-                    onViewChart={handleViewChart}
                   />
                 ))}
               </div>
             )}
-
-            {/* Control Form Dialog */}
-            <Dialog open={showControlForm} onOpenChange={setShowControlForm}>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingControl ? "Editar Controle" : "Novo Controle"}
-                  </DialogTitle>
-                </DialogHeader>
-                <ControlForm
-                  control={editingControl}
-                  onSave={handleSaveControl}
-                  onCancel={closeControlForm}
-                />
-              </DialogContent>
-            </Dialog>
-
-            {/* Control Chart Dialog */}
-            <Dialog open={showControlChart} onOpenChange={setShowControlChart}>
-              <DialogContent className="max-w-4xl">
-                <DialogHeader>
-                  <DialogTitle>Monitoramento de Controle</DialogTitle>
-                </DialogHeader>
-                {chartControl && (
-                  <ControlChart
-                    control={chartControl}
-                    onClose={closeControlChart}
-                  />
-                )}
-              </DialogContent>
-            </Dialog>
           </TabsContent>
 
           {/* Charts Tab */}
@@ -475,75 +477,130 @@ export default function RepositoryDetail() {
 
           {/* Instrumentation Tab */}
           <TabsContent value="instrumentation" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {repository.devices.map((device) => (
-                <Card key={device.id}>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center space-x-2">
-                      <Cpu className="h-4 w-4" />
-                      <span>{device.name}</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          Status:
-                        </span>
-                        <Badge
-                          variant={
-                            device.status === "Online"
-                              ? "default"
-                              : "destructive"
-                          }
-                        >
-                          {device.status}
-                        </Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          Valor:
-                        </span>
-                        <span className="font-medium">{device.value}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          Última leitura:
-                        </span>
-                        <span className="text-sm">há 30s</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Instrumentação</h3>
+                <p className="text-sm text-muted-foreground">
+                  Configure instrumentações com operações de sensor, referências
+                  e comparadores
+                </p>
+              </div>
+              <Button onClick={() => setShowInstrumentationForm(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Instrumentação
+              </Button>
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <AlertTriangle className="h-5 w-5 text-orange-500" />
-                  <span>Alertas e Notificações</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                    <span className="text-sm">
-                      Sensor de temperatura próximo ao limite máximo
-                    </span>
-                    <Badge variant="outline">Atenção</Badge>
+            {instrumentations.length === 0 ? (
+              <Card>
+                <CardContent className="py-8">
+                  <div className="text-center">
+                    <BarChart3 className="h-8 w-8 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-lg font-semibold mb-2">
+                      Nenhuma instrumentação configurada
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      Crie instrumentações para monitoramento e análise de dados
+                    </p>
+                    <Button onClick={() => setShowInstrumentationForm(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Criar Primeira Instrumentação
+                    </Button>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <span className="text-sm">
-                      Manutenção programada para amanhã às 14h
-                    </span>
-                    <Badge variant="outline">Info</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {instrumentations.map((instrumentation) => (
+                  <Instrumentation
+                    key={instrumentation.id}
+                    instrumentation={instrumentation}
+                    onEdit={handleEditInstrumentation}
+                    onDelete={handleDeleteInstrumentation}
+                    onViewChart={handleViewInstrumentationChart}
+                  />
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
+
+        {/* Operation Form Dialog */}
+        <Dialog open={showOperationForm} onOpenChange={setShowOperationForm}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                {editingOperation ? "Editar Operação" : "Nova Operação"}
+              </DialogTitle>
+            </DialogHeader>
+            <OperationForm
+              operation={editingOperation}
+              onSave={handleSaveOperation}
+              onCancel={() => {
+                setShowOperationForm(false);
+                setEditingOperation(null);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {/* Control Form Dialog */}
+        <Dialog open={showControlForm} onOpenChange={setShowControlForm}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                {editingControl ? "Editar Controle" : "Novo Controle"}
+              </DialogTitle>
+            </DialogHeader>
+            <ControlNewForm
+              control={editingControl}
+              onSave={handleSaveControl}
+              onCancel={() => {
+                setShowControlForm(false);
+                setEditingControl(null);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {/* Instrumentation Form Dialog */}
+        <Dialog
+          open={showInstrumentationForm}
+          onOpenChange={setShowInstrumentationForm}
+        >
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                {editingInstrumentation
+                  ? "Editar Instrumentação"
+                  : "Nova Instrumentação"}
+              </DialogTitle>
+            </DialogHeader>
+            <InstrumentationForm
+              instrumentation={editingInstrumentation}
+              onSave={handleSaveInstrumentation}
+              onCancel={() => {
+                setShowInstrumentationForm(false);
+                setEditingInstrumentation(null);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {/* Chart Dialog */}
+        <Dialog open={showChart} onOpenChange={setShowChart}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>Monitoramento</DialogTitle>
+            </DialogHeader>
+            {chartData && (
+              <ControlChart
+                control={chartData}
+                onClose={() => setShowChart(false)}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
