@@ -22,25 +22,27 @@ interface DeviceDetailProps {
 
 // Mock device data
 const deviceData = {
-  "sensor-temp-001": {
-    name: "Sensor-Temp-001",
-    type: "Sensor de Temperatura",
+  thing3: {
+    name: "Thing 3",
+    model: "ESP32",
+    version: "1.0.3",
+    ip: "192.168.1.8",
+    lastMessage: "08/02/2025, 17:42:01",
+    location: "Camaquã, State of Rio Grande do Sul, Brazil",
     repository: "EXEMPLO 1",
     status: "Online",
     value: "23.5°C",
-    location: "Linha de Produção A",
-    lastSeen: "há 30s",
-    battery: 85,
   },
   "smart-thermostat": {
-    name: "Smart-Thermostat",
-    type: "Termostato Inteligente",
+    name: "Termostato Casa",
+    model: "ESP32",
+    version: "2.0.1",
+    ip: "192.168.1.35",
+    lastMessage: "08/02/2025, 17:43:15",
+    location: "Santa Maria, State of Rio Grande do Sul, Brazil",
     repository: "Smart Home Beta",
     status: "Online",
     value: "22.0°C",
-    location: "Sala Principal",
-    lastSeen: "há 15s",
-    battery: null,
   },
 };
 
@@ -86,7 +88,7 @@ export default function DeviceDetail({
                 {device.name}
               </h1>
               <p className="text-muted-foreground">
-                {device.type} • {device.repository}
+                {device.model} v{device.version} • {device.repository}
               </p>
             </div>
             <Badge className={getStatusColor(device.status)}>
@@ -127,19 +129,27 @@ export default function DeviceDetail({
                 </Badge>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Localização:</span>
-                <span className="font-medium">{device.location}</span>
+                <span className="text-muted-foreground">Modelo:</span>
+                <span className="font-medium">{device.model}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Última atividade:</span>
-                <span className="font-medium">{device.lastSeen}</span>
+                <span className="text-muted-foreground">Versão:</span>
+                <span className="font-medium">{device.version}</span>
               </div>
-              {device.battery !== null && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Bateria:</span>
-                  <span className="font-medium">{device.battery}%</span>
-                </div>
-              )}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">IP:</span>
+                <span className="font-medium font-mono">{device.ip}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Última mensagem:</span>
+                <span className="font-medium text-xs">
+                  {device.lastMessage}
+                </span>
+              </div>
+              <div className="text-sm">
+                <span className="text-muted-foreground">Localização:</span>
+                <p className="font-medium text-xs mt-1">{device.location}</p>
+              </div>
             </CardContent>
           </Card>
 
@@ -153,7 +163,7 @@ export default function DeviceDetail({
                   {device.value}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Última leitura: {device.lastSeen}
+                  Última leitura: {device.lastMessage}
                 </p>
               </div>
             </CardContent>

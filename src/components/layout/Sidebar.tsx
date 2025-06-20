@@ -25,6 +25,11 @@ interface SidebarProps {
 interface Device {
   id: string;
   name: string;
+  model: string;
+  version: string;
+  ip: string;
+  lastMessage: string;
+  location: string;
   status: "Online" | "Offline";
 }
 
@@ -39,12 +44,25 @@ const repositories: Repository[] = [
     id: "example1",
     name: "EXEMPLO 1",
     devices: [
-      { id: "sensor-temp-001", name: "Sensor-Temp-001", status: "Online" },
-      { id: "pump-control-a1", name: "Pump-Control-A1", status: "Online" },
       {
-        id: "pressure-sensor-01",
-        name: "Pressure-Sensor-01",
-        status: "Offline",
+        id: "thing3",
+        name: "Thing 3",
+        model: "ESP32",
+        version: "1.0.3",
+        ip: "192.168.1.8",
+        lastMessage: "08/02/2025, 17:42:01",
+        location: "Camaquã, State of Rio Grande do Sul, Brazil",
+        status: "Online",
+      },
+      {
+        id: "sensor-temp-001",
+        name: "Sensor Temp 001",
+        model: "ESP32-S3",
+        version: "1.2.1",
+        ip: "192.168.1.15",
+        lastMessage: "08/02/2025, 17:41:45",
+        location: "Porto Alegre, State of Rio Grande do Sul, Brazil",
+        status: "Online",
       },
     ],
   },
@@ -53,21 +71,29 @@ const repositories: Repository[] = [
     name: "EXEMPLO 2",
     devices: [
       {
-        id: "humidity-sensor-02",
-        name: "Humidity-Sensor-02",
-        status: "Online",
+        id: "humidity-device",
+        name: "Sensor Umidade",
+        model: "ESP32-C3",
+        version: "1.1.0",
+        ip: "192.168.1.22",
+        lastMessage: "08/02/2025, 17:40:12",
+        location: "Pelotas, State of Rio Grande do Sul, Brazil",
+        status: "Offline",
       },
-      { id: "temp-controller-b", name: "Temp-Controller-B", status: "Online" },
     ],
   },
   {
     id: "smart-home",
     name: "Smart Home Beta",
     devices: [
-      { id: "smart-thermostat", name: "Smart-Thermostat", status: "Online" },
       {
-        id: "motion-detector-01",
-        name: "Motion-Detector-01",
+        id: "smart-thermostat",
+        name: "Termostato Casa",
+        model: "ESP32",
+        version: "2.0.1",
+        ip: "192.168.1.35",
+        lastMessage: "08/02/2025, 17:43:15",
+        location: "Santa Maria, State of Rio Grande do Sul, Brazil",
         status: "Online",
       },
     ],

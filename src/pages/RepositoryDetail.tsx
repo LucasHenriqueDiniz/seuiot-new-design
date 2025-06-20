@@ -35,6 +35,7 @@ import {
   InstrumentationConfig,
 } from "@/components/instrumentation/Instrumentation";
 import { ControlChart } from "@/components/controls/Control";
+import { GraphsTab } from "@/components/graphs/GraphsTab";
 
 // Mock data - in real app this would come from API
 const repositoryData = {
@@ -427,42 +428,10 @@ export default function RepositoryDetail({
 
           {/* Charts Tab */}
           <TabsContent value="charts" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Gráfico de Temperatura (24h)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64 flex items-center justify-center bg-muted/20 rounded-lg">
-                  <p className="text-muted-foreground">
-                    Gráfico de temperatura seria renderizado aqui
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Umidade</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-32 flex items-center justify-center bg-muted/20 rounded-lg">
-                    <p className="text-muted-foreground">Gráfico de umidade</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Pressão</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-32 flex items-center justify-center bg-muted/20 rounded-lg">
-                    <p className="text-muted-foreground">Gráfico de pressão</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <GraphsTab
+              operations={operations}
+              instrumentations={instrumentations}
+            />
           </TabsContent>
 
           {/* Instrumentation Tab */}
