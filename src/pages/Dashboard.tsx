@@ -81,9 +81,27 @@ const statusColors = {
   Offline: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
 };
 
-export default function Dashboard() {
+interface DashboardProps {
+  selectedRepository: string | null;
+  selectedDevice: string | null;
+  onSelectRepository: (repoId: string | null) => void;
+  onSelectDevice: (deviceId: string | null) => void;
+}
+
+export default function Dashboard({
+  selectedRepository,
+  selectedDevice,
+  onSelectRepository,
+  onSelectDevice,
+}: DashboardProps) {
   return (
-    <Layout title="Dashboard">
+    <Layout
+      title="Dashboard"
+      selectedRepository={selectedRepository}
+      selectedDevice={selectedDevice}
+      onSelectRepository={onSelectRepository}
+      onSelectDevice={onSelectDevice}
+    >
       <div className="space-y-6">
         {/* Welcome Section */}
         <div className="mb-8">

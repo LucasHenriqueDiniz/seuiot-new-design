@@ -13,9 +13,17 @@ interface HeaderProps {
   title: string;
   onToggleSidebar: () => void;
   isSidebarOpen: boolean;
+  selectedRepository?: string | null;
+  selectedDevice?: string | null;
 }
 
-export function Header({ title, onToggleSidebar, isSidebarOpen }: HeaderProps) {
+export function Header({
+  title,
+  onToggleSidebar,
+  isSidebarOpen,
+  selectedRepository,
+  selectedDevice,
+}: HeaderProps) {
   const { theme, setTheme } = useTheme();
 
   return (

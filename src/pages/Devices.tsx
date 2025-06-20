@@ -109,9 +109,27 @@ const getDeviceIcon = (type: string) => {
   return Cpu;
 };
 
-export default function Devices() {
+interface DevicesProps {
+  selectedRepository: string | null;
+  selectedDevice: string | null;
+  onSelectRepository: (repoId: string | null) => void;
+  onSelectDevice: (deviceId: string | null) => void;
+}
+
+export default function Devices({
+  selectedRepository,
+  selectedDevice,
+  onSelectRepository,
+  onSelectDevice,
+}: DevicesProps) {
   return (
-    <Layout title="Dispositivos">
+    <Layout
+      title="Dispositivos"
+      selectedRepository={selectedRepository}
+      selectedDevice={selectedDevice}
+      onSelectRepository={onSelectRepository}
+      onSelectDevice={onSelectDevice}
+    >
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

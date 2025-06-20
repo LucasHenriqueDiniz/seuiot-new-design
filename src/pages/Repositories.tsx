@@ -84,9 +84,27 @@ const statusColors = {
     "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
 };
 
-export default function Repositories() {
+interface RepositoriesProps {
+  selectedRepository: string | null;
+  selectedDevice: string | null;
+  onSelectRepository: (repoId: string | null) => void;
+  onSelectDevice: (deviceId: string | null) => void;
+}
+
+export default function Repositories({
+  selectedRepository,
+  selectedDevice,
+  onSelectRepository,
+  onSelectDevice,
+}: RepositoriesProps) {
   return (
-    <Layout title="Repositórios">
+    <Layout
+      title="Repositórios"
+      selectedRepository={selectedRepository}
+      selectedDevice={selectedDevice}
+      onSelectRepository={onSelectRepository}
+      onSelectDevice={onSelectDevice}
+    >
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
