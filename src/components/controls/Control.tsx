@@ -257,7 +257,7 @@ export function ControlForm({ control, onSave, onCancel }: ControlFormProps) {
           </Select>
         </div>
         <div>
-          <Label htmlFor="attenuation">Atenuaç��o (dB)</Label>
+          <Label htmlFor="attenuation">Atenuação (dB)</Label>
           <Select
             value={formData.attenuation.toString()}
             onValueChange={(value) =>
@@ -346,28 +346,54 @@ interface ControlChartProps {
 }
 
 export function ControlChart({ control, onClose }: ControlChartProps) {
-  // Generate some sample data for the chart
+  // Generate realistic sample data based on control type
   const generateSampleData = () => {
     const data = [];
     const now = Date.now();
     for (let i = 0; i < 50; i++) {
+      let value;
+      const time = now - (50 - i) * control.period;
+
+      if (control.name.toLowerCase().includes("joystick")) {
+        // Joystick data: more varied, centered around middle value
+        value = 50 + Math.sin(i * 0.3) * 30 + (Math.random() - 0.5) * 10;
+      } else if (control.name.toLowerCase().includes("temperatura")) {
+        // Temperature: slower changes, more stable
+        value = 65 + Math.sin(i * 0.1) * 15 + (Math.random() - 0.5) * 5;
+      } else if (control.name.toLowerCase().includes("bomba")) {
+        // Pump: step changes, more digital-like
+        value = Math.random() > 0.7 ? 100 : 20 + (Math.random() - 0.5) * 10;
+      } else {
+        // Default pattern
+        value = Math.random() * 100 + Math.sin(i * 0.2) * 20 + 40;
+      }
+
       data.push({
-        time: new Date(now - (50 - i) * 1000),
-        value: Math.random() * 100 + Math.sin(i * 0.1) * 20 + 50,
+        time: new Date(time),
+        value: Math.max(0, Math.min(100, value)),
       });
     }
     return data;
   };
 
   const chartData = generateSampleData();
+  const maxValue = Math.max(...chartData.map((d) => d.value));
+  const minValue = Math.min(...chartData.map((d) => d.value));
+  const avgValue =
+    chartData.reduce((sum, d) => sum + d.value, 0) / chartData.length;
+  const stdDev = Math.sqrt(
+    chartData.reduce((sum, d) => sum + Math.pow(d.value - avgValue, 2), 0) /
+      chartData.length,
+  );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">{control.name}</h3>
           <p className="text-sm text-muted-foreground">
-            Monitoramento em tempo real - Pin: {control.pinName}
+            Monitoramento em tempo real - Pin: {control.pinName} |{" "}
+            {control.bitWidth} bits | {control.attenuation}dB
           </p>
         </div>
         <Button variant="outline" onClick={onClose}>
@@ -375,34 +401,88 @@ export function ControlChart({ control, onClose }: ControlChartProps) {
         </Button>
       </div>
 
-      <div className="h-64 border rounded-lg bg-muted/20 flex items-center justify-center">
-        <div className="text-center">
-          <BarChart3 className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            Gráfico em tempo real do {control.name}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Valor atual: {control.currentValue} | Período: {control.period}ms
-          </p>
+      {/* Simple ASCII-style chart visualization */}
+      <div className="h-64 border rounded-lg bg-background p-4 font-mono text-xs">
+        <div className="h-full relative">
+          <div className="absolute inset-0 grid grid-rows-10 opacity-20">
+            {Array.from({ length: 11 }).map((_, i) => (
+              <div
+                key={i}
+                className="border-b border-muted-foreground/20"
+              ></div>
+            ))}
+          </div>
+
+          <div className="absolute inset-0 flex items-end justify-between">
+            {chartData.slice(-20).map((point, i) => {
+              const height = `${point.value}%`;
+              return (
+                <div
+                  key={i}
+                  className="flex flex-col items-center space-y-1 flex-1"
+                >
+                  <div
+                    className="bg-primary rounded-t-sm min-w-[2px] transition-all duration-200 hover:bg-primary/80"
+                    style={{ height }}
+                    title={`Valor: ${point.value.toFixed(1)} em ${point.time.toLocaleTimeString()}`}
+                  ></div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-muted-foreground">
+            <span>100</span>
+            <span>75</span>
+            <span>50</span>
+            <span>25</span>
+            <span>0</span>
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
         <div className="text-center">
           <p className="text-xs text-muted-foreground">Máximo</p>
-          <p className="text-lg font-bold text-green-600">95.2</p>
+          <p className="text-lg font-bold text-green-600">
+            {maxValue.toFixed(1)}
+          </p>
         </div>
         <div className="text-center">
           <p className="text-xs text-muted-foreground">Mínimo</p>
-          <p className="text-lg font-bold text-blue-600">12.8</p>
+          <p className="text-lg font-bold text-blue-600">
+            {minValue.toFixed(1)}
+          </p>
         </div>
         <div className="text-center">
           <p className="text-xs text-muted-foreground">Média</p>
-          <p className="text-lg font-bold text-primary">52.7</p>
+          <p className="text-lg font-bold text-primary">
+            {avgValue.toFixed(1)}
+          </p>
         </div>
         <div className="text-center">
           <p className="text-xs text-muted-foreground">Desvio</p>
-          <p className="text-lg font-bold text-orange-600">±8.3</p>
+          <p className="text-lg font-bold text-orange-600">
+            ±{stdDev.toFixed(1)}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between text-sm bg-muted/50 rounded-lg p-3">
+        <div className="flex items-center space-x-4">
+          <span className="text-muted-foreground">Taxa de amostragem:</span>
+          <span className="font-medium">
+            {control.sampleCount} amostras/{control.period}ms
+          </span>
+        </div>
+        <div className="flex items-center space-x-4">
+          <span className="text-muted-foreground">Status:</span>
+          <Badge
+            variant={control.status === "active" ? "default" : "secondary"}
+            className="capitalize"
+          >
+            {control.status}
+          </Badge>
         </div>
       </div>
     </div>
