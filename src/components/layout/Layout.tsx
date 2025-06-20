@@ -6,9 +6,20 @@ import { cn } from "@/lib/utils";
 interface LayoutProps {
   children: React.ReactNode;
   title: string;
+  selectedRepository?: string | null;
+  selectedDevice?: string | null;
+  onSelectRepository?: (repoId: string | null) => void;
+  onSelectDevice?: (deviceId: string | null) => void;
 }
 
-export function Layout({ children, title }: LayoutProps) {
+export function Layout({
+  children,
+  title,
+  selectedRepository = null,
+  selectedDevice = null,
+  onSelectRepository = () => {},
+  onSelectDevice = () => {},
+}: LayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -20,9 +31,18 @@ export function Layout({ children, title }: LayoutProps) {
         title={title}
         onToggleSidebar={toggleSidebar}
         isSidebarOpen={isSidebarOpen}
+        selectedRepository={selectedRepository}
+        selectedDevice={selectedDevice}
       />
 
-      <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onClose={closeSidebar}
+        selectedRepository={selectedRepository}
+        selectedDevice={selectedDevice}
+        onSelectRepository={onSelectRepository}
+        onSelectDevice={onSelectDevice}
+      />
 
       <main
         className={cn(

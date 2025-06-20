@@ -7,23 +7,30 @@ import {
   ChevronDown,
   ChevronRight,
   X,
-  Wifi,
-  WifiOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  selectedRepository: string | null;
+  selectedDevice: string | null;
+  onSelectRepository: (repoId: string | null) => void;
+  onSelectDevice: (deviceId: string | null) => void;
 }
 
 interface Device {
   id: string;
   name: string;
   status: "Online" | "Offline";
-  repositoryId: string;
 }
 
 interface Repository {
@@ -37,23 +44,12 @@ const repositories: Repository[] = [
     id: "example1",
     name: "EXEMPLO 1",
     devices: [
-      {
-        id: "sensor-temp-001",
-        name: "Sensor-Temp-001",
-        status: "Online",
-        repositoryId: "example1",
-      },
-      {
-        id: "pump-control-a1",
-        name: "Pump-Control-A1",
-        status: "Online",
-        repositoryId: "example1",
-      },
+      { id: "sensor-temp-001", name: "Sensor-Temp-001", status: "Online" },
+      { id: "pump-control-a1", name: "Pump-Control-A1", status: "Online" },
       {
         id: "pressure-sensor-01",
         name: "Pressure-Sensor-01",
         status: "Offline",
-        repositoryId: "example1",
       },
     ],
   },
@@ -65,82 +61,80 @@ const repositories: Repository[] = [
         id: "humidity-sensor-02",
         name: "Humidity-Sensor-02",
         status: "Online",
-        repositoryId: "example2",
       },
-      {
-        id: "temp-controller-b",
-        name: "Temp-Controller-B",
-        status: "Online",
-        repositoryId: "example2",
-      },
+      { id: "temp-controller-b", name: "Temp-Controller-B", status: "Online" },
     ],
   },
   {
     id: "smart-home",
     name: "Smart Home Beta",
     devices: [
-      {
-        id: "smart-thermostat",
-        name: "Smart-Thermostat",
-        status: "Online",
-        repositoryId: "smart-home",
-      },
+      { id: "smart-thermostat", name: "Smart-Thermostat", status: "Online" },
       {
         id: "motion-detector-01",
         name: "Motion-Detector-01",
         status: "Online",
-        repositoryId: "smart-home",
       },
     ],
   },
 ];
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
+export function Sidebar({
+  isOpen,
+  onClose,
+  selectedRepository,
+  selectedDevice,
+  onSelectRepository,
+  onSelectDevice,
+}: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [expandedRepositories, setExpandedRepositories] = useState<string[]>(
-    [],
-  );
-  const [selectedRepository, setSelectedRepository] = useState<string | null>(
-    null,
-  );
-  const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
 
-  const toggleRepositoryExpanded = (repoId: string) => {
-    setExpandedRepositories((prev) =>
-      prev.includes(repoId)
-        ? prev.filter((id) => id !== repoId)
-        : [...prev, repoId],
-    );
+  const isActive = (href: string) => {
+    if (
+      href === "/dashboard" &&
+      (location.pathname === "/" || location.pathname === "/dashboard")
+    )
+      return true;
+    return location.pathname.startsWith(href);
   };
 
-  const selectRepository = (repoId: string) => {
-    setSelectedRepository(repoId);
-    setSelectedDevice(null);
+  const handleRepositorySelect = (repoId: string) => {
+    onSelectRepository(repoId);
     navigate(`/repositories/${repoId}`);
     onClose();
   };
 
-  const selectDevice = (deviceId: string, repoId: string) => {
-    setSelectedRepository(repoId);
-    setSelectedDevice(deviceId);
-    navigate(`/repositories/${repoId}?device=${deviceId}`);
+  const handleDeviceSelect = (deviceId: string) => {
+    onSelectDevice(deviceId);
+    navigate(`/devices/${deviceId}`);
     onClose();
   };
 
-  const deselectRepository = () => {
-    setSelectedRepository(null);
-    setSelectedDevice(null);
+  const handleClearRepository = () => {
+    onSelectRepository(null);
     navigate("/repositories");
   };
 
-  const isActive = (href: string) => {
-    if (href === "/dashboard" && location.pathname === "/") return true;
-    return location.pathname.startsWith(href);
+  const handleClearDevice = () => {
+    onSelectDevice(null);
+    navigate("/devices");
   };
 
-  const isRepositoryExpanded = (repoId: string) =>
-    expandedRepositories.includes(repoId);
+  const getSelectedRepositoryName = () => {
+    if (!selectedRepository) return null;
+    return repositories.find((r) => r.id === selectedRepository)?.name;
+  };
+
+  const getSelectedDeviceName = () => {
+    if (!selectedDevice || !selectedRepository) return null;
+    const repo = repositories.find((r) => r.id === selectedRepository);
+    return repo?.devices.find((d) => d.id === selectedDevice)?.name;
+  };
+
+  const getAllDevices = () => {
+    return repositories.flatMap((repo) => repo.devices);
+  };
 
   return (
     <>
@@ -179,153 +173,161 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
               {/* Repositories Section */}
               <div>
-                <Link
-                  to="/repositories"
-                  onClick={() => {
-                    if (selectedRepository) {
-                      deselectRepository();
-                    }
-                    onClose();
-                  }}
-                  className={cn(
-                    "flex items-center space-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                    isActive("/repositories") && !selectedRepository
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                      : "text-sidebar-foreground",
-                  )}
-                >
-                  <FolderOpen className="h-5 w-5" />
-                  <span className="flex-1">Repositórios</span>
-                  <Badge variant="secondary" className="h-5 text-xs">
-                    {repositories.length}
-                  </Badge>
-                </Link>
+                <div className="flex items-center">
+                  <Link
+                    to="/repositories"
+                    onClick={() => {
+                      if (selectedRepository) {
+                        handleClearRepository();
+                      }
+                      onClose();
+                    }}
+                    className={cn(
+                      "flex flex-1 items-center space-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                      isActive("/repositories") && !selectedRepository
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                        : "text-sidebar-foreground",
+                    )}
+                  >
+                    <FolderOpen className="h-5 w-5" />
+                    <span className="flex-1">Repositórios</span>
+                    <Badge variant="secondary" className="h-5 text-xs">
+                      {repositories.length}
+                    </Badge>
+                  </Link>
 
-                {/* Repository List */}
-                <div className="mt-2 ml-4 space-y-1">
-                  {repositories.map((repo) => (
-                    <div key={repo.id}>
-                      <div className="flex items-center">
-                        <button
-                          onClick={() => selectRepository(repo.id)}
+                  {/* Repository Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="ml-1 h-8 w-8 p-0"
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      {repositories.map((repo) => (
+                        <DropdownMenuItem
+                          key={repo.id}
+                          onClick={() => handleRepositorySelect(repo.id)}
                           className={cn(
-                            "flex flex-1 items-center space-x-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent",
-                            selectedRepository === repo.id
-                              ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                              : "text-sidebar-foreground/80",
+                            selectedRepository === repo.id && "bg-accent",
                           )}
                         >
-                          <FolderOpen className="h-4 w-4" />
-                          <span className="flex-1">{repo.name}</span>
-                          <Badge variant="outline" className="h-4 text-xs">
+                          <FolderOpen className="h-4 w-4 mr-2" />
+                          {repo.name}
+                          <Badge
+                            variant="outline"
+                            className="ml-auto h-4 text-xs"
+                          >
                             {repo.devices.length}
                           </Badge>
-                        </button>
-
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="ml-1 h-6 w-6 p-0"
-                          onClick={() => toggleRepositoryExpanded(repo.id)}
-                        >
-                          {isRepositoryExpanded(repo.id) ? (
-                            <ChevronDown className="h-3 w-3" />
-                          ) : (
-                            <ChevronRight className="h-3 w-3" />
-                          )}
-                        </Button>
-
-                        {selectedRepository === repo.id && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="ml-1 h-6 w-6 p-0 text-destructive hover:text-destructive"
-                            onClick={deselectRepository}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
-
-                      {/* Devices List */}
-                      {isRepositoryExpanded(repo.id) && (
-                        <div className="mt-1 ml-4 space-y-1">
-                          {repo.devices.map((device) => (
-                            <button
-                              key={device.id}
-                              onClick={() => selectDevice(device.id, repo.id)}
-                              className={cn(
-                                "flex w-full items-center space-x-2 rounded-lg px-3 py-1.5 text-xs transition-colors hover:bg-sidebar-accent",
-                                selectedDevice === device.id
-                                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                                  : "text-sidebar-foreground/70",
-                              )}
-                            >
-                              <Cpu className="h-3 w-3" />
-                              <span className="flex-1 truncate">
-                                {device.name}
-                              </span>
-                              {device.status === "Online" ? (
-                                <Wifi className="h-3 w-3 text-green-500" />
-                              ) : (
-                                <WifiOff className="h-3 w-3 text-red-500" />
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
+
+                {/* Selected Repository Display */}
+                {selectedRepository && (
+                  <div className="mt-2 ml-6 flex items-center space-x-2">
+                    <span className="text-sm font-medium text-primary">
+                      {getSelectedRepositoryName()}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 text-destructive"
+                      onClick={handleClearRepository}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
               </div>
 
-              {/* Devices Link */}
-              <Link
-                to="/devices"
-                onClick={onClose}
-                className={cn(
-                  "flex items-center space-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  isActive("/devices")
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                    : "text-sidebar-foreground",
+              {/* Devices Section */}
+              <div>
+                <div className="flex items-center">
+                  <Link
+                    to="/devices"
+                    onClick={() => {
+                      if (selectedDevice) {
+                        handleClearDevice();
+                      }
+                      onClose();
+                    }}
+                    className={cn(
+                      "flex flex-1 items-center space-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                      isActive("/devices") && !selectedDevice
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                        : "text-sidebar-foreground",
+                    )}
+                  >
+                    <Cpu className="h-5 w-5" />
+                    <span className="flex-1">Dispositivos</span>
+                    <Badge variant="secondary" className="h-5 text-xs">
+                      {getAllDevices().length}
+                    </Badge>
+                  </Link>
+
+                  {/* Device Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="ml-1 h-8 w-8 p-0"
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      {getAllDevices().map((device) => (
+                        <DropdownMenuItem
+                          key={device.id}
+                          onClick={() => handleDeviceSelect(device.id)}
+                          className={cn(
+                            selectedDevice === device.id && "bg-accent",
+                          )}
+                        >
+                          <Cpu className="h-4 w-4 mr-2" />
+                          {device.name}
+                          <div
+                            className={cn(
+                              "ml-auto h-2 w-2 rounded-full",
+                              device.status === "Online"
+                                ? "bg-green-500"
+                                : "bg-red-500",
+                            )}
+                          />
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                {/* Selected Device Display */}
+                {selectedDevice && (
+                  <div className="mt-2 ml-6 flex items-center space-x-2">
+                    <span className="text-sm font-medium text-primary">
+                      {getSelectedDeviceName()}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 text-destructive"
+                      onClick={handleClearDevice}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
                 )}
-              >
-                <Cpu className="h-5 w-5" />
-                <span className="flex-1">Dispositivos</span>
-                <Badge variant="secondary" className="h-5 text-xs">
-                  {repositories.reduce(
-                    (total, repo) => total + repo.devices.length,
-                    0,
-                  )}
-                </Badge>
-              </Link>
+              </div>
             </nav>
           </div>
-
-          {/* Selection Status */}
-          {(selectedRepository || selectedDevice) && (
-            <div className="border-t border-sidebar-border p-4">
-              <div className="rounded-lg bg-primary/10 p-3">
-                <p className="text-xs font-medium text-primary">Selecionado:</p>
-                {selectedDevice ? (
-                  <p className="text-xs text-primary/80 mt-1">
-                    {
-                      repositories
-                        .find((r) => r.id === selectedRepository)
-                        ?.devices.find((d) => d.id === selectedDevice)?.name
-                    }
-                  </p>
-                ) : selectedRepository ? (
-                  <p className="text-xs text-primary/80 mt-1">
-                    {
-                      repositories.find((r) => r.id === selectedRepository)
-                        ?.name
-                    }
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          )}
 
           <div className="border-t border-sidebar-border p-4">
             <div className="rounded-lg bg-sidebar-accent p-3">
