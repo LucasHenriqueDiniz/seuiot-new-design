@@ -1,4 +1,3 @@
-// filepath: c:\Users\lucas\Documents\GitHub\seuiot-new-design\src\pages\Devices.tsx
 import { Layout } from "@/components/layout/Layout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,11 +49,8 @@ import {
   RefreshCw,
   Loader2,
   Battery,
-  LayoutGrid,
-  List,
 } from "lucide-react";
 import { useState } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const devices = [
   {
@@ -63,7 +59,7 @@ const devices = [
     type: "Sensor de Temperatura",
     repository: "EXEMPLO 1",
     status: "Online",
-    battery: null,
+    battery: 85,
     lastSeen: "há 30s",
     location: "Linha de Produção A",
     value: "23.5°C",
@@ -85,7 +81,7 @@ const devices = [
     type: "Sensor de Umidade",
     repository: "EXEMPLO 2",
     status: "Offline",
-    battery: null,
+    battery: 12,
     lastSeen: "há 2h",
     location: "Estufa B",
     value: "N/A",
@@ -174,7 +170,6 @@ export default function Devices({
   const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
   const [deviceName, setDeviceName] = useState("");
   const [showFirmwareDialog, setShowFirmwareDialog] = useState(false);
-  const [viewMode, setViewMode] = useState<"card" | "list">("card");
 
   const handleInstallFirmware = async () => {
     if (!selectedFirmware || !selectedRepo || !deviceName) return;
@@ -389,253 +384,137 @@ export default function Devices({
           </DialogContent>
         </Dialog>
 
-        {/* Filters with List/Card Toggle */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-between">
-          <div className="flex flex-row gap-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">Repositório</Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>Todos</DropdownMenuItem>
-                <DropdownMenuItem>EXEMPLO 1</DropdownMenuItem>
-                <DropdownMenuItem>EXEMPLO 2</DropdownMenuItem>
-                <DropdownMenuItem>Smart Home Beta</DropdownMenuItem>
-                <DropdownMenuItem>Energy Monitor</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">Status</Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>Todos</DropdownMenuItem>
-                <DropdownMenuItem>Online</DropdownMenuItem>
-                <DropdownMenuItem>Offline</DropdownMenuItem>
-                <DropdownMenuItem>Manutenção</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant={viewMode === "card" ? "default" : "outline"} 
-              size="icon"
-              className="h-9 w-9"
-              onClick={() => setViewMode("card")}
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant={viewMode === "list" ? "default" : "outline"} 
-              size="icon" 
-              className="h-9 w-9"
-              onClick={() => setViewMode("list")}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">Repositório</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>Todos</DropdownMenuItem>
+              <DropdownMenuItem>EXEMPLO 1</DropdownMenuItem>
+              <DropdownMenuItem>EXEMPLO 2</DropdownMenuItem>
+              <DropdownMenuItem>Smart Home Beta</DropdownMenuItem>
+              <DropdownMenuItem>Energy Monitor</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">Status</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>Todos</DropdownMenuItem>
+              <DropdownMenuItem>Online</DropdownMenuItem>
+              <DropdownMenuItem>Offline</DropdownMenuItem>
+              <DropdownMenuItem>Manutenção</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        {/* Device Cards or List */}
-        {viewMode === "card" ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {devices.map((device) => {
-              const DeviceIcon = getDeviceIcon(device.type);
-              return (
-                <Card
-                  key={device.id}
-                  className="hover:shadow-md transition-shadow"
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <DeviceIcon className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-foreground">{device.name}</h3>
-                          <p className="text-xs text-muted-foreground">{device.type}</p>
-                        </div>
+        {/* Device Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {devices.map((device) => {
+            const DeviceIcon = getDeviceIcon(device.type);
+            return (
+              <Card
+                key={device.id}
+                className="hover:shadow-md transition-shadow"
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <DeviceIcon className="h-5 w-5 text-primary" />
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>Detalhes</DropdownMenuItem>
-                          <DropdownMenuItem>Editar</DropdownMenuItem>
-                          <DropdownMenuItem>Atualizar Firmware</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">Remover</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Badge
-                        className={
-                          statusColors[device.status as keyof typeof statusColors]
-                        }
-                      >
-                        <div className="flex items-center space-x-1">
-                          {device.status === "Online" ? (
-                            <Wifi className="h-3 w-3 mr-1" />
-                          ) : device.status === "Offline" ? (
-                            <WifiOff className="h-3 w-3 mr-1" />
-                          ) : (
-                            <AlertTriangle className="h-3 w-3 mr-1" />
-                          )}
-                          {device.status}
-                        </div>
-                      </Badge>
-                      {device.battery !== null && (
-                        <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                          <Battery 
-                            className={`h-4 w-4 ${
-                              device.battery > 50 
-                                ? "text-green-600" 
-                                : device.battery > 20 
-                                  ? "text-yellow-600" 
-                                  : "text-red-600"
-                            }`} 
-                          />
-                          <span>{device.battery}%</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">
-                          Repositório:
-                        </span>
-                        <span className="font-medium">{device.repository}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">
-                          Localização:
-                        </span>
-                        <span className="font-medium">{device.location}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">
-                          Valor Atual:
-                        </span>
-                        <span className="font-medium text-primary">
-                          {device.value}
-                        </span>
+                      <div>
+                        <h3 className="font-medium text-foreground">{device.name}</h3>
+                        <p className="text-xs text-muted-foreground">{device.type}</p>
                       </div>
                     </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>Detalhes</DropdownMenuItem>
+                        <DropdownMenuItem>Editar</DropdownMenuItem>
+                        <DropdownMenuItem>Atualizar Firmware</DropdownMenuItem>
+                        <DropdownMenuItem className="text-red-600">Remover</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardHeader>
 
-                    <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-3">
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Badge
+                      className={
+                        statusColors[device.status as keyof typeof statusColors]
+                      }
+                    >
                       <div className="flex items-center space-x-1">
-                        <Activity className="h-3 w-3" />
-                        <span>Última atividade: {device.lastSeen}</span>
+                        {device.status === "Online" ? (
+                          <Wifi className="h-3 w-3 mr-1" />
+                        ) : device.status === "Offline" ? (
+                          <WifiOff className="h-3 w-3 mr-1" />
+                        ) : (
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                        )}
+                        {device.status}
                       </div>
+                    </Badge>
+                    {device.battery !== null && (
+                      <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                        <Battery 
+                          className={`h-4 w-4 ${
+                            device.battery > 50 
+                              ? "text-green-600" 
+                              : device.battery > 20 
+                                ? "text-yellow-600" 
+                                : "text-red-600"
+                          }`} 
+                        />
+                        <span>{device.battery}%</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        Repositório:
+                      </span>
+                      <span className="font-medium">{device.repository}</span>
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="bg-card rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[300px]">Nome / Tipo</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Repositório</TableHead>
-                  <TableHead>Valor atual</TableHead>
-                  <TableHead>Localização</TableHead>
-                  <TableHead>Última atividade</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {devices.map((device) => {
-                  const DeviceIcon = getDeviceIcon(device.type);
-                  return (
-                    <TableRow key={device.id}>
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <DeviceIcon className="h-4 w-4 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-foreground">{device.name}</p>
-                            <p className="text-xs text-muted-foreground">{device.type}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2 items-center">
-                          <Badge
-                            className={
-                              statusColors[device.status as keyof typeof statusColors]
-                            }
-                          >
-                            <div className="flex items-center space-x-1">
-                              {device.status === "Online" ? (
-                                <Wifi className="h-3 w-3 mr-1" />
-                              ) : device.status === "Offline" ? (
-                                <WifiOff className="h-3 w-3 mr-1" />
-                              ) : (
-                                <AlertTriangle className="h-3 w-3 mr-1" />
-                              )}
-                              {device.status}
-                            </div>
-                          </Badge>
-                          {device.battery !== null && (
-                            <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                              <Battery 
-                                className={`h-4 w-4 ${
-                                  device.battery > 50 
-                                    ? "text-green-600" 
-                                    : device.battery > 20 
-                                      ? "text-yellow-600" 
-                                      : "text-red-600"
-                                }`} 
-                              />
-                              <span>{device.battery}%</span>
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{device.repository}</TableCell>
-                      <TableCell className="font-medium text-primary">{device.value}</TableCell>
-                      <TableCell>{device.location}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                          <Activity className="h-3 w-3" />
-                          <span>{device.lastSeen}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Detalhes</DropdownMenuItem>
-                            <DropdownMenuItem>Editar</DropdownMenuItem>
-                            <DropdownMenuItem>Atualizar Firmware</DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">Remover</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        Localização:
+                      </span>
+                      <span className="font-medium">{device.location}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        Valor Atual:
+                      </span>
+                      <span className="font-medium text-primary">
+                        {device.value}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-3">
+                    <div className="flex items-center space-x-1">
+                      <Activity className="h-3 w-3" />
+                      <span>Última atividade: {device.lastSeen}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
     </Layout>
   );

@@ -127,7 +127,7 @@ export function Header({
                 className="relative text-foreground hover:bg-accent"
               >
                 <Bell className="w-4 h-4" />
-                <Badge className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 text-xs bg-red-500 text-white">
+                <Badge className="flex items-center justify-center absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 text-xs bg-red-500 text-white">
                   2
                 </Badge>
               </Button>

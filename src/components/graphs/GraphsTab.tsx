@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/layout/PageHeader";
 import {
   Dialog,
   DialogContent,
@@ -289,29 +290,24 @@ export function GraphsTab({ operations, instrumentations }: GraphsTabProps) {
   return (
     <div className="space-y-6">
       {/* Controls */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">Gráficos</h3>
-          <p className="text-sm text-muted-foreground">
-            Monitoramento visual de operações e instrumentações
-          </p>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isPaused}
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Atualizar
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
+      <PageHeader
+        title="Gráficos"
+        description="Monitoramento visual de operações e instrumentações"
+        withSearch={true}
+        searchPlaceholder="Buscar gráficos..."
+        buttons={[
+          {
+            label: "Atualizar",
+            icon: RefreshCw,
+            variant: "outline",
+            onClick: handleRefresh,
+            disabled: isPaused
+          },
+          {
+            label: "Adicionar",
+            icon: Plus,
+            variant: "outline",
+            onClick: () => {
               const newGraph: GraphData = {
                 id: `graph_${Date.now()}`,
                 title: `Novo Gráfico ${graphs.length + 1}`,
@@ -321,31 +317,16 @@ export function GraphsTab({ operations, instrumentations }: GraphsTabProps) {
                 chartType: "bar",
               };
               setGraphs([...graphs, newGraph]);
-            }}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar
-          </Button>
-
-          <Button
-            variant={editMode ? "default" : "outline"}
-            size="sm"
-            onClick={toggleEditMode}
-          >
-            {editMode ? (
-              <>
-                <Play className="h-4 w-4 mr-2" />
-                Finalizar Edição
-              </>
-            ) : (
-              <>
-                <Edit className="h-4 w-4 mr-2" />
-                Editar
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
+            }
+          },
+          {
+            label: editMode ? "Finalizar Edição" : "Editar",
+            icon: editMode ? Play : Edit,
+            variant: editMode ? "default" : "outline",
+            onClick: toggleEditMode
+          }
+        ]}
+      />
 
       {editMode && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">

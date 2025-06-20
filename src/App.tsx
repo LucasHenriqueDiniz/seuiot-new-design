@@ -8,6 +8,7 @@ import { ThemeProvider } from "next-themes";
 import Dashboard from "./pages/Dashboard";
 import Repositories from "./pages/Repositories";
 import Devices from "./pages/Devices";
+import FirmwareInstall from "./pages/FirmwareInstall";
 import RepositoryDetail from "./pages/RepositoryDetail";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -65,6 +66,17 @@ const App = () => {
                 path="/devices"
                 element={
                   <Devices
+                    selectedRepository={selectedRepository}
+                    selectedDevice={selectedDevice}
+                    onSelectRepository={setSelectedRepository}
+                    onSelectDevice={setSelectedDevice}
+                  />
+                }
+              />
+              <Route
+                path="/firmware-install"
+                element={
+                  <FirmwareInstall
                     selectedRepository={selectedRepository}
                     selectedDevice={selectedDevice}
                     onSelectRepository={setSelectedRepository}

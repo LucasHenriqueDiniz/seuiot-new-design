@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -274,28 +275,23 @@ export default function RepositoryDetail({
     >
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Database className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">
-                {repository.name}
-              </h1>
-              <p className="text-muted-foreground">{repository.description}</p>
-            </div>
-            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
-              {repository.status}
-            </Badge>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Button variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Sincronizar
-            </Button>
-          </div>
+        <PageHeader 
+          title={repository.name}
+          description={repository.description}
+          buttons={[
+            {
+              label: "Sincronizar",
+              icon: RefreshCw,
+              variant: "outline",
+              onClick: () => console.log("Sincronizando repositório...")
+            }
+          ]}
+          withSearch={false}
+        />
+        <div className="flex">
+          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+            {repository.status}
+          </Badge>
         </div>
 
         {/* Navigation Tabs */}
@@ -330,19 +326,19 @@ export default function RepositoryDetail({
 
           {/* Operations Tab */}
           <TabsContent value="operations" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold">Operações</h3>
-                <p className="text-sm text-muted-foreground">
-                  Configure e monitore operações como Joystick Y, sensores e
-                  controles
-                </p>
-              </div>
-              <Button onClick={() => setShowOperationForm(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nova Operação
-              </Button>
-            </div>
+            <PageHeader 
+              title="Operações"
+              description="Configure e monitore operações como Joystick Y, sensores e controles"
+              withSearch={true}
+              searchPlaceholder="Buscar operações..."
+              buttons={[
+                {
+                  label: "Nova Operação",
+                  icon: Plus,
+                  onClick: () => setShowOperationForm(true)
+                }
+              ]}
+            />
 
             {operations.length === 0 ? (
               <Card>
@@ -380,18 +376,19 @@ export default function RepositoryDetail({
 
           {/* Control Tab */}
           <TabsContent value="control" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold">Controles</h3>
-                <p className="text-sm text-muted-foreground">
-                  Sensores e Atuadores com controle Bruto, Operação ou PID
-                </p>
-              </div>
-              <Button onClick={() => setShowControlForm(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Novo Controle
-              </Button>
-            </div>
+            <PageHeader 
+              title="Controles"
+              description="Sensores e Atuadores com controle Bruto, Operação ou PID"
+              withSearch={true}
+              searchPlaceholder="Buscar controles..."
+              buttons={[
+                {
+                  label: "Novo Controle",
+                  icon: Plus,
+                  onClick: () => setShowControlForm(true)
+                }
+              ]}
+            />
 
             {controls.length === 0 ? (
               <Card>
@@ -436,33 +433,21 @@ export default function RepositoryDetail({
 
           {/* Instrumentation Tab */}
           <TabsContent value="instrumentation" className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-semibold">Instrumentação</h3>
-                <p className="text-sm text-muted-foreground">
-                  Configure instrumentações com operações de sensor, referências
-                  e comparadores
-                </p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <select className="px-3 py-2 border border-border rounded-md text-sm bg-background">
-                  <option value="">Todos os tipos</option>
-                  <option value="linear">Linear</option>
-                  <option value="quantification">Quantificação</option>
-                </select>
-                <select className="px-3 py-2 border border-border rounded-md text-sm bg-background">
-                  <option value="">Todos comparadores</option>
-                  <option value="greater">Maior que</option>
-                  <option value="less">Menor que</option>
-                  <option value="equal">Igual a</option>
-                  <option value="range">Intervalo</option>
-                </select>
-                <Button onClick={() => setShowInstrumentationForm(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Instrumentação
-                </Button>
-              </div>
-            </div>
+            <PageHeader
+              title="Instrumentação"
+              description="Configure instrumentações com operações de sensor, referências e comparadores"
+              withSearch={true}
+              searchPlaceholder="Buscar instrumentações..."
+              buttons={[
+                {
+                  label: "Nova Instrumentação",
+                  icon: Plus,
+                  onClick: () => setShowInstrumentationForm(true)
+                }
+              ]}
+              showFilters={true}
+              onFilter={() => {}}
+            />
 
             {instrumentations.length === 0 ? (
               <Card>

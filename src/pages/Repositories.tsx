@@ -213,70 +213,15 @@ export default function Repositories({
                   <span>Criado: {repo.created}</span>
                 </div>
 
-                <div className="flex space-x-2 pt-2">
-                  <Button size="sm" className="flex-1">
+                <div className="flex pt-2">
+                  <Button size="sm" className="flex-1" onClick={() => onSelectRepository(String(repo.id))}>
                     <Eye className="h-4 w-4 mr-2" />
                     Abrir
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <Edit className="h-4 w-4 mr-2" />
-                    Editar
                   </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
-        </div>
-
-        {/* Stats Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Database className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Total</p>
-                  <p className="text-xl font-bold">5</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Activity className="h-5 w-5 text-green-600" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Ativos</p>
-                  <p className="text-xl font-bold">2</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Cpu className="h-5 w-5 text-blue-600" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Dispositivos</p>
-                  <p className="text-xl font-bold">33</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Clock className="h-5 w-5 text-orange-600" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Operações</p>
-                  <p className="text-xl font-bold">45</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </Layout>

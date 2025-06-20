@@ -6,80 +6,82 @@ import {
   Activity,
   Database,
   Cpu,
-  Wifi,
+  Clock,
   TrendingUp,
   TrendingDown,
-  MoreHorizontal,
+  ArrowRight,
   Eye,
   Settings,
+  Upload,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "../lib/utils";
+import { Link } from "react-router-dom";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
+// Definindo tipos para controle de mudanças
+type ChangeType = "positive" | "neutral";
+
+// Updated stats cards - removed connectivity rate and replaced with more relevant metrics
 const statsCards = [
   {
-    title: "Repositórios Ativos",
+    title: "Repositórios",
     value: "5",
-    change: "+12%",
-    changeType: "positive" as const,
+    change: "+1",
+    changeType: "positive" as ChangeType,
     icon: Database,
-    description: "Total de repositórios configurados",
+    description: "Total de repositórios",
   },
   {
-    title: "Dispositivos Conectados",
+    title: "Dispositivos",
     value: "12",
     change: "+2",
-    changeType: "positive" as const,
+    changeType: "positive" as ChangeType,
     icon: Cpu,
-    description: "Dispositivos online no momento",
+    description: "Dispositivos registrados",
   },
   {
-    title: "Taxa de Conectividade",
-    value: "94.2%",
-    change: "-2.1%",
-    changeType: "negative" as const,
-    icon: Wifi,
-    description: "Média das últimas 24h",
-  },
-  {
-    title: "Operações Ativas",
+    title: "Comandos",
     value: "28",
     change: "+5",
-    changeType: "positive" as const,
+    changeType: "positive" as ChangeType,
     icon: Activity,
-    description: "Operações em execução",
+    description: "Comandos configurados",
+  },
+  {
+    title: "Última Atividade",
+    value: "5min",
+    change: "",
+    changeType: "neutral" as ChangeType,
+    icon: Clock,
+    description: "Desde a última comunicação",
   },
 ];
 
+// Updated recent repositories - removed status that doesn't exist
 const recentRepositories = [
   {
     name: "EXEMPLO 1",
-    status: "Ativo",
     devices: 8,
     lastSync: "há 2 min",
     operations: 12,
   },
   {
     name: "EXEMPLO 2",
-    status: "Sincronizando",
     devices: 4,
     lastSync: "há 5 min",
     operations: 6,
   },
   {
     name: "Projeto Alpha",
-    status: "Offline",
     devices: 0,
     lastSync: "há 2h",
     operations: 0,
   },
 ];
-
-const statusColors = {
-  Ativo: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-  Sincronizando:
-    "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-  Offline: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
-};
 
 interface DashboardProps {
   selectedRepository: string | null;
@@ -128,21 +130,21 @@ export default function Dashboard({
                   {stat.value}
                 </div>
                 <div className="flex items-center space-x-2">
-                  <div
-                    className={cn(
-                      "flex items-center space-x-1 text-xs",
-                      stat.changeType === "positive"
-                        ? "text-green-600"
-                        : "text-red-600",
-                    )}
-                  >
-                    {stat.changeType === "positive" ? (
-                      <TrendingUp className="h-3 w-3" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3" />
-                    )}
-                    <span>{stat.change}</span>
-                  </div>
+                  {stat.change && (
+                    <div
+                      className={cn(
+                        "flex items-center space-x-1 text-xs",
+                        stat.changeType === "positive"
+                          ? "text-green-600"
+                          : "text-muted-foreground"
+                      )}
+                    >
+                      {stat.changeType === "positive" && (
+                        <TrendingUp className="h-3 w-3" />
+                      )}
+                      <span>{stat.change}</span>
+                    </div>
+                  )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
                   {stat.description}
@@ -157,8 +159,11 @@ export default function Dashboard({
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Repositórios Recentes</span>
-              <Button variant="outline" size="sm">
-                Ver Todos
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/repositories">
+                  <span>Ver Todos</span>
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Link>
               </Button>
             </CardTitle>
           </CardHeader>
@@ -178,35 +183,28 @@ export default function Dashboard({
                         {repo.name}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        {repo.devices} dispositivos • {repo.operations}{" "}
-                        operações
+                        {repo.devices} dispositivos • {repo.operations} comandos
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center space-x-4">
                     <div className="text-right">
-                      <Badge
-                        className={
-                          statusColors[repo.status as keyof typeof statusColors]
-                        }
-                      >
-                        {repo.status}
-                      </Badge>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {repo.lastSync}
+                      <p className="text-xs text-muted-foreground">
+                        Atualizado {repo.lastSync}
                       </p>
                     </div>
 
                     <div className="flex items-center space-x-1">
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link to={`/repositories/${repo.name.toLowerCase().replace(" ", "-")}`}>
+                          <Eye className="h-4 w-4" />
+                        </Link>
                       </Button>
-                      <Button variant="ghost" size="sm">
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link to={`/repositories/${repo.name.toLowerCase().replace(" ", "-")}/settings`}>
+                          <Settings className="h-4 w-4" />
+                        </Link>
                       </Button>
                     </div>
                   </div>
@@ -218,53 +216,59 @@ export default function Dashboard({
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="pt-6">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center">
-                  <Database className="h-6 w-6 text-primary-foreground" />
+          <Link to="/repositories/new">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardContent className="pt-6">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center">
+                    <Database className="h-6 w-6 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Novo Repositório</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Criar um novo repositório IoT
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold">Novo Repositório</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Criar um novo repositório IoT
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="pt-6">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
-                  <Cpu className="h-6 w-6 text-accent-foreground" />
+          <Link to="/devices">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardContent className="pt-6">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
+                    <Cpu className="h-6 w-6 text-accent-foreground" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Conectar Dispositivo</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Adicionar novo dispositivo IoT
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold">Conectar Dispositivo</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Adicionar novo dispositivo IoT
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="pt-6">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center">
-                  <Activity className="h-6 w-6 text-secondary-foreground" />
+          <Link to="/firmware-install">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardContent className="pt-6">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center">
+                    <Upload className="h-6 w-6 text-secondary-foreground" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Instalar Firmware</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Configurar e instalar firmware em dispositivos
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold">Ver Relatórios</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Análises e métricas detalhadas
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       </div>
     </Layout>

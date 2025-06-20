@@ -21,6 +21,7 @@ export function Layout({
   onSelectDevice = () => {},
 }: LayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const closeSidebar = () => setIsSidebarOpen(false);
@@ -42,15 +43,16 @@ export function Layout({
         selectedDevice={selectedDevice}
         onSelectRepository={onSelectRepository}
         onSelectDevice={onSelectDevice}
+        isCollapsed={isCollapsed}
+        setIsCollapsed={setIsCollapsed}
       />
 
       <main
         className={cn(
           "pt-16 transition-all duration-300 ease-in-out",
-          "lg:pl-64", // Always offset by sidebar on large screens
-          "pr-[calc(100vw-100%)]", // Add padding to prevent scrollbar layout shift
         )}
-      >
+        style={{ paddingLeft: isCollapsed ? "5rem" : "16rem"  }}
+        >
         <div className="container mx-auto p-4 lg:p-6 max-w-full overflow-x-hidden">
           {children}
         </div>
