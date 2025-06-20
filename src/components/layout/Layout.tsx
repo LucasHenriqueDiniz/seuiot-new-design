@@ -48,9 +48,12 @@ export function Layout({
         className={cn(
           "pt-16 transition-all duration-300 ease-in-out",
           "lg:pl-64", // Always offset by sidebar on large screens
+          "pr-[calc(100vw-100%)]", // Add padding to prevent scrollbar layout shift
         )}
       >
-        <div className="container mx-auto p-4 lg:p-6">{children}</div>
+        <div className="container mx-auto p-4 lg:p-6 max-w-full overflow-x-hidden">
+          {children}
+        </div>
       </main>
     </div>
   );

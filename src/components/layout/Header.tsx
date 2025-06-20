@@ -10,6 +10,7 @@ import {
   HelpCircle,
   LogOut,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -46,13 +47,13 @@ export function Header({
 
   return (
     <TooltipProvider>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-blue-600/95 backdrop-blur-md border-b border-blue-500/30 h-16 flex items-center justify-between px-4 lg:px-6 shadow-sm">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border h-16 flex items-center justify-between px-4 lg:px-6 shadow-sm">
         <div className="flex items-center space-x-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={onToggleSidebar}
-            className="lg:hidden text-white hover:bg-white/10"
+            className="lg:hidden text-foreground hover:bg-accent"
           >
             <div className="w-5 h-5 flex flex-col justify-center space-y-1">
               <div className="w-full h-0.5 bg-current"></div>
@@ -72,15 +73,19 @@ export function Header({
                 e.currentTarget.nextElementSibling?.classList.remove("hidden");
               }}
             />
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center hidden">
-              <span className="text-white font-bold text-sm">I</span>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center hidden">
+              <span className="text-primary-foreground font-bold text-sm">
+                I
+              </span>
             </div>
-            <h1 className="text-xl font-semibold text-white">Seu IoT</h1>
+            <h1 className="text-xl font-semibold text-foreground">Seu IoT</h1>
           </div>
 
           <div className="hidden sm:block">
-            <span className="text-blue-200">|</span>
-            <span className="ml-3 text-lg font-medium text-white">{title}</span>
+            <span className="text-muted-foreground">|</span>
+            <span className="ml-3 text-lg font-medium text-foreground">
+              {title}
+            </span>
           </div>
         </div>
 
@@ -91,7 +96,7 @@ export function Header({
               <Button
                 variant="ghost"
                 size="sm"
-                className="flex items-center space-x-1 text-white hover:bg-white/10"
+                className="flex items-center space-x-1 text-foreground hover:bg-accent"
               >
                 <Globe className="w-4 h-4" />
                 <span className="hidden sm:inline text-sm">PT</span>
@@ -113,28 +118,70 @@ export function Header({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Notifications with Tooltip */}
-          <Tooltip>
-            <TooltipTrigger asChild>
+          {/* Notifications Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className="relative text-white hover:bg-white/10"
+                className="relative text-foreground hover:bg-accent"
               >
                 <Bell className="w-4 h-4" />
                 <Badge className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 text-xs bg-red-500 text-white">
                   2
                 </Badge>
               </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <div className="space-y-1">
-                <p className="font-semibold">2 novas notificações</p>
-                <p className="text-xs">• Dispositivo desconectado</p>
-                <p className="text-xs">• Temperatura alta detectada</p>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+              <div className="p-4 border-b">
+                <h3 className="font-semibold">Notificações</h3>
+                <p className="text-xs text-muted-foreground">2 não lidas</p>
               </div>
-            </TooltipContent>
-          </Tooltip>
+              <div className="max-h-96 overflow-y-auto">
+                <DropdownMenuItem className="flex items-start space-x-3 p-4">
+                  <div className="w-2 h-2 rounded-full bg-red-500 mt-2 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Thing 3 desconectado</p>
+                    <p className="text-xs text-muted-foreground">
+                      Dispositivo perdeu conexão há 5 minutos
+                    </p>
+                    <p className="text-xs text-muted-foreground">há 5 min</p>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="flex items-start space-x-3 p-4">
+                  <div className="w-2 h-2 rounded-full bg-orange-500 mt-2 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">
+                      Temperatura alta detectada
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Sensor registrou 35°C no EXEMPLO 1
+                    </p>
+                    <p className="text-xs text-muted-foreground">há 12 min</p>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="flex items-start space-x-3 p-4 opacity-60">
+                  <div className="w-2 h-2 rounded-full bg-gray-400 mt-2 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Sistema atualizado</p>
+                    <p className="text-xs text-muted-foreground">
+                      Nova versão instalada com sucesso
+                    </p>
+                    <p className="text-xs text-muted-foreground">há 2h</p>
+                  </div>
+                </DropdownMenuItem>
+              </div>
+              <div className="p-2 border-t">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-center"
+                >
+                  Ver todas as notificações
+                </Button>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Theme Toggle */}
           <Tooltip>
@@ -143,7 +190,7 @@ export function Header({
                 variant="ghost"
                 size="sm"
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="text-white hover:bg-white/10"
+                className="text-foreground hover:bg-accent"
               >
                 <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                 <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -160,23 +207,29 @@ export function Header({
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-white hover:bg-white/10"
+                className="text-foreground hover:bg-accent"
               >
                 <Settings className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem>
-                <Palette className="w-4 h-4 mr-2" />
-                Configurações Visuais
+              <DropdownMenuItem asChild>
+                <Link to="/settings" className="flex items-center">
+                  <Palette className="w-4 h-4 mr-2" />
+                  Configurações Visuais
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell className="w-4 h-4 mr-2" />
-                Configurações de Notificação
+              <DropdownMenuItem asChild>
+                <Link to="/settings" className="flex items-center">
+                  <Bell className="w-4 h-4 mr-2" />
+                  Configurações de Notificação
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Shield className="w-4 h-4 mr-2" />
-                Segurança e Privacidade
+              <DropdownMenuItem asChild>
+                <Link to="/settings" className="flex items-center">
+                  <Shield className="w-4 h-4 mr-2" />
+                  Segurança e Privacidade
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
@@ -192,10 +245,10 @@ export function Header({
               <Button
                 variant="ghost"
                 size="sm"
-                className="flex items-center space-x-2 text-white hover:bg-white/10"
+                className="flex items-center space-x-2 text-foreground hover:bg-accent"
               >
-                <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-                  <User className="w-3 h-3 text-white" />
+                <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                  <User className="w-3 h-3 text-primary-foreground" />
                 </div>
                 <span className="hidden sm:inline text-sm">Admin</span>
               </Button>

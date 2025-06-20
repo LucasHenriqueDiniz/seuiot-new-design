@@ -380,21 +380,75 @@ export function Sidebar({
 
           <div className="border-t border-sidebar-border p-4">
             {selectedDevice ? (
-              <div className="rounded-lg bg-primary/10 p-3">
-                <p className="text-xs font-medium text-primary">
-                  Dispositivo Selecionado:
-                </p>
-                <p className="text-xs text-primary/80 font-medium mt-1">
-                  {getSelectedDeviceName()}
-                </p>
-                <p className="text-xs text-primary/60 mt-1">
-                  {(() => {
-                    const device = getAllDevices().find(
-                      (d) => d.id === selectedDevice,
-                    );
-                    return device ? `${device.model} • ${device.ip}` : "";
-                  })()}
-                </p>
+              <div className="rounded-lg bg-primary/10 p-3 relative">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-xs font-medium text-primary">
+                      Dispositivo Selecionado:
+                    </p>
+                    <p className="text-xs text-primary/80 font-medium mt-1">
+                      {getSelectedDeviceName()}
+                    </p>
+                    <p className="text-xs text-primary/60 mt-1">
+                      {(() => {
+                        const device = getAllDevices().find(
+                          (d) => d.id === selectedDevice,
+                        );
+                        const repo = repositories.find((r) =>
+                          r.devices.some((dev) => dev.id === selectedDevice),
+                        );
+                        return device && repo
+                          ? `${device.model} • ${device.ip}`
+                          : "";
+                      })()}
+                    </p>
+                    {selectedRepository && (
+                      <p className="text-xs text-primary/60 mt-1">
+                        Repo:{" "}
+                        {
+                          repositories.find((r) => r.id === selectedRepository)
+                            ?.name
+                        }
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 w-5 p-0 text-destructive hover:text-destructive -mt-1 -mr-1"
+                    onClick={handleClearDevice}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            ) : selectedRepository ? (
+              <div className="rounded-lg bg-primary/10 p-3 relative">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-xs font-medium text-primary">
+                      Repositório Selecionado:
+                    </p>
+                    <p className="text-xs text-primary/80 font-medium mt-1">
+                      {getSelectedRepositoryName()}
+                    </p>
+                    <p className="text-xs text-primary/60 mt-1">
+                      {
+                        repositories.find((r) => r.id === selectedRepository)
+                          ?.devices.length
+                      }{" "}
+                      dispositivos
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 w-5 p-0 text-destructive hover:text-destructive -mt-1 -mr-1"
+                    onClick={handleClearRepository}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="rounded-lg bg-sidebar-accent p-3">
