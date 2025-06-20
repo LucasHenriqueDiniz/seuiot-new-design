@@ -7,16 +7,11 @@ import {
   ChevronDown,
   ChevronRight,
   X,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -79,6 +74,8 @@ const repositories: Repository[] = [
   },
 ];
 
+const recentRepositories = ["example1", "smart-home"]; // Recently used repos
+
 export function Sidebar({
   isOpen,
   onClose,
@@ -89,6 +86,8 @@ export function Sidebar({
 }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
+  const [repositoriesExpanded, setRepositoriesExpanded] = useState(false);
+  const [devicesExpanded, setDevicesExpanded] = useState(false);
 
   const isActive = (href: string) => {
     if (
@@ -171,69 +170,79 @@ export function Sidebar({
                 <span className="flex-1">Dashboard</span>
               </Link>
 
-              {/* Repositories Section */}
-              <div>
-                <div className="flex items-center">
-                  <Link
-                    to="/repositories"
-                    onClick={() => {
-                      if (selectedRepository) {
-                        handleClearRepository();
-                      }
-                      onClose();
-                    }}
-                    className={cn(
-                      "flex flex-1 items-center space-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                      isActive("/repositories") && !selectedRepository
-                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                        : "text-sidebar-foreground",
-                    )}
-                  >
-                    <FolderOpen className="h-5 w-5" />
-                    <span className="flex-1">Repositórios</span>
-                    <Badge variant="secondary" className="h-5 text-xs">
-                      {repositories.length}
-                    </Badge>
-                  </Link>
-
-                  {/* Repository Dropdown */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="ml-1 h-8 w-8 p-0"
-                      >
-                        <ChevronDown className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      {repositories.map((repo) => (
-                        <DropdownMenuItem
-                          key={repo.id}
-                          onClick={() => handleRepositorySelect(repo.id)}
+              {/* Recent Repositories */}
+              {recentRepositories.length > 0 && (
+                <div className="mb-4">
+                  <div className="flex items-center space-x-2 px-3 py-1.5">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Usados Recentemente
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    {recentRepositories.map((repoId) => {
+                      const repo = repositories.find((r) => r.id === repoId);
+                      if (!repo) return null;
+                      return (
+                        <button
+                          key={repoId}
+                          onClick={() => handleRepositorySelect(repoId)}
                           className={cn(
-                            selectedRepository === repo.id && "bg-accent",
+                            "flex w-full items-center space-x-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent",
+                            selectedRepository === repoId &&
+                              "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
                           )}
                         >
-                          <FolderOpen className="h-4 w-4 mr-2" />
-                          {repo.name}
-                          <Badge
-                            variant="outline"
-                            className="ml-auto h-4 text-xs"
-                          >
-                            {repo.devices.length}
-                          </Badge>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                          <FolderOpen className="h-4 w-4" />
+                          <span className="flex-1 truncate">{repo.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
+              )}
 
-                {/* Selected Repository Display */}
-                {selectedRepository && (
-                  <div className="mt-2 ml-6 flex items-center space-x-2">
-                    <span className="text-sm font-medium text-primary">
+              {/* Repositories Section */}
+              <div>
+                {!selectedRepository ? (
+                  <div className="flex items-center">
+                    <button
+                      onClick={() =>
+                        setRepositoriesExpanded(!repositoriesExpanded)
+                      }
+                      className={cn(
+                        "flex flex-1 items-center space-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                        isActive("/repositories") && !selectedRepository
+                          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                          : "text-sidebar-foreground",
+                      )}
+                    >
+                      <FolderOpen className="h-5 w-5" />
+                      <span className="flex-1">Repositórios</span>
+                      <Badge variant="secondary" className="h-5 text-xs">
+                        {repositories.length}
+                      </Badge>
+                    </button>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="ml-1 h-8 w-8 p-0"
+                      onClick={() =>
+                        setRepositoriesExpanded(!repositoriesExpanded)
+                      }
+                    >
+                      {repositoriesExpanded ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2 px-3 py-2.5">
+                    <FolderOpen className="h-5 w-5 text-primary" />
+                    <span className="flex-1 text-sm font-medium text-primary">
                       {getSelectedRepositoryName()}
                     </span>
                     <Button
@@ -246,73 +255,64 @@ export function Sidebar({
                     </Button>
                   </div>
                 )}
+
+                {/* Repository List */}
+                {repositoriesExpanded && !selectedRepository && (
+                  <div className="mt-1 ml-6 space-y-1">
+                    {repositories.map((repo) => (
+                      <button
+                        key={repo.id}
+                        onClick={() => handleRepositorySelect(repo.id)}
+                        className="flex w-full items-center space-x-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent text-sidebar-foreground/80"
+                      >
+                        <FolderOpen className="h-4 w-4" />
+                        <span className="flex-1">{repo.name}</span>
+                        <Badge variant="outline" className="h-4 text-xs">
+                          {repo.devices.length}
+                        </Badge>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Devices Section */}
               <div>
-                <div className="flex items-center">
-                  <Link
-                    to="/devices"
-                    onClick={() => {
-                      if (selectedDevice) {
-                        handleClearDevice();
-                      }
-                      onClose();
-                    }}
-                    className={cn(
-                      "flex flex-1 items-center space-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                      isActive("/devices") && !selectedDevice
-                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                        : "text-sidebar-foreground",
-                    )}
-                  >
-                    <Cpu className="h-5 w-5" />
-                    <span className="flex-1">Dispositivos</span>
-                    <Badge variant="secondary" className="h-5 text-xs">
-                      {getAllDevices().length}
-                    </Badge>
-                  </Link>
+                {!selectedDevice ? (
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => setDevicesExpanded(!devicesExpanded)}
+                      className={cn(
+                        "flex flex-1 items-center space-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                        isActive("/devices") && !selectedDevice
+                          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                          : "text-sidebar-foreground",
+                      )}
+                    >
+                      <Cpu className="h-5 w-5" />
+                      <span className="flex-1">Dispositivos</span>
+                      <Badge variant="secondary" className="h-5 text-xs">
+                        {getAllDevices().length}
+                      </Badge>
+                    </button>
 
-                  {/* Device Dropdown */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="ml-1 h-8 w-8 p-0"
-                      >
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="ml-1 h-8 w-8 p-0"
+                      onClick={() => setDevicesExpanded(!devicesExpanded)}
+                    >
+                      {devicesExpanded ? (
                         <ChevronDown className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      {getAllDevices().map((device) => (
-                        <DropdownMenuItem
-                          key={device.id}
-                          onClick={() => handleDeviceSelect(device.id)}
-                          className={cn(
-                            selectedDevice === device.id && "bg-accent",
-                          )}
-                        >
-                          <Cpu className="h-4 w-4 mr-2" />
-                          {device.name}
-                          <div
-                            className={cn(
-                              "ml-auto h-2 w-2 rounded-full",
-                              device.status === "Online"
-                                ? "bg-green-500"
-                                : "bg-red-500",
-                            )}
-                          />
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                {/* Selected Device Display */}
-                {selectedDevice && (
-                  <div className="mt-2 ml-6 flex items-center space-x-2">
-                    <span className="text-sm font-medium text-primary">
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2 px-3 py-2.5">
+                    <Cpu className="h-5 w-5 text-primary" />
+                    <span className="flex-1 text-sm font-medium text-primary">
                       {getSelectedDeviceName()}
                     </span>
                     <Button
@@ -323,6 +323,30 @@ export function Sidebar({
                     >
                       <X className="h-3 w-3" />
                     </Button>
+                  </div>
+                )}
+
+                {/* Device List */}
+                {devicesExpanded && !selectedDevice && (
+                  <div className="mt-1 ml-6 space-y-1">
+                    {getAllDevices().map((device) => (
+                      <button
+                        key={device.id}
+                        onClick={() => handleDeviceSelect(device.id)}
+                        className="flex w-full items-center space-x-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent text-sidebar-foreground/80"
+                      >
+                        <Cpu className="h-4 w-4" />
+                        <span className="flex-1 truncate">{device.name}</span>
+                        <div
+                          className={cn(
+                            "h-2 w-2 rounded-full",
+                            device.status === "Online"
+                              ? "bg-green-500"
+                              : "bg-red-500",
+                          )}
+                        />
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>

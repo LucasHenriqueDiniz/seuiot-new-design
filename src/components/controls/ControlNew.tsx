@@ -35,8 +35,6 @@ export interface ControlNewConfig {
   operationMode: string;
   referenceValue: number;
   saveToFlash: boolean;
-  currentValue: number;
-  status: "active" | "inactive" | "error";
   // PID specific fields
   pidKp?: number;
   pidKi?: number;
@@ -52,19 +50,6 @@ interface ControlNewProps {
 }
 
 export function ControlNew({ control, onEdit, onDelete }: ControlNewProps) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-      case "inactive":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
-      case "error":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
-    }
-  };
-
   const getControlTypeIcon = () => {
     return control.type === "sensor" ? Thermometer : Zap;
   };
@@ -99,9 +84,6 @@ export function ControlNew({ control, onEdit, onDelete }: ControlNewProps) {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Badge className={getStatusColor(control.status)}>
-              {control.status}
-            </Badge>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm">
@@ -140,12 +122,6 @@ export function ControlNew({ control, onEdit, onDelete }: ControlNewProps) {
             <span className="text-muted-foreground">Flash:</span>
             <span className="ml-2 font-medium">
               {control.saveToFlash ? "Sim" : "Não"}
-            </span>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Valor:</span>
-            <span className="ml-2 font-medium text-primary">
-              {control.currentValue}
             </span>
           </div>
         </div>
@@ -196,8 +172,6 @@ export function ControlNewForm({
       operationMode: "continuous",
       referenceValue: 0,
       saveToFlash: false,
-      currentValue: 0,
-      status: "inactive",
       pidKp: 1.0,
       pidKi: 0.1,
       pidKd: 0.01,

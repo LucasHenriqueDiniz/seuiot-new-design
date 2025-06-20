@@ -37,14 +37,12 @@ import {
 export interface OperationConfig {
   id: string;
   name: string;
-  pinName: string;
+  pinNumber: number;
   bitWidth: number;
   attenuation: number;
   sampleCount: number;
   period: number;
-  currentValue: number;
   type: "analog" | "digital" | "pwm";
-  status: "active" | "inactive" | "error";
   description?: string;
 }
 
@@ -63,26 +61,6 @@ export function Operation({
   onViewChart,
   onClick,
 }: OperationProps) {
-  const [isRunning, setIsRunning] = useState(operation.status === "active");
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-      case "inactive":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
-      case "error":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
-    }
-  };
-
-  const toggleOperation = () => {
-    setIsRunning(!isRunning);
-    // Here you would send the command to the device
-  };
-
   return (
     <Card
       className="hover:shadow-md transition-shadow cursor-pointer"
@@ -97,14 +75,11 @@ export function Operation({
             <div>
               <CardTitle className="text-base">{operation.name}</CardTitle>
               <p className="text-xs text-muted-foreground">
-                Pin: {operation.pinName}
+                Pin: {operation.pinNumber}
               </p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Badge className={getStatusColor(operation.status)}>
-              {operation.status}
-            </Badge>
             <DropdownMenu>
               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                 <Button variant="ghost" size="sm">
@@ -171,39 +146,6 @@ export function Operation({
             <span className="ml-2 font-medium">{operation.period} ms</span>
           </div>
         </div>
-
-        <div className="border-t pt-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-sm text-muted-foreground">
-                Valor Atual:
-              </span>
-              <span className="ml-2 text-lg font-bold text-primary">
-                {operation.currentValue}
-              </span>
-            </div>
-            <Button
-              variant={isRunning ? "destructive" : "default"}
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleOperation();
-              }}
-            >
-              {isRunning ? (
-                <>
-                  <Pause className="h-4 w-4 mr-2" />
-                  Parar
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 mr-2" />
-                  Iniciar
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
@@ -224,14 +166,12 @@ export function OperationForm({
     operation || {
       id: "",
       name: "",
-      pinName: "",
+      pinNumber: 0,
       bitWidth: 12,
       attenuation: 0,
       sampleCount: 64,
       period: 1000,
-      currentValue: 0,
       type: "analog",
-      status: "inactive",
       description: "",
     },
   );
@@ -256,14 +196,20 @@ export function OperationForm({
           />
         </div>
         <div>
-          <Label htmlFor="pinName">Nome do Pino</Label>
+          <Label htmlFor="pinNumber">Número do Pino</Label>
           <Input
-            id="pinName"
-            value={formData.pinName}
+            id="pinNumber"
+            type="number"
+            value={formData.pinNumber}
             onChange={(e) =>
-              setFormData({ ...formData, pinName: e.target.value })
+              setFormData({
+                ...formData,
+                pinNumber: parseInt(e.target.value) || 0,
+              })
             }
-            placeholder="Ex: GPIO_33"
+            placeholder="Ex: 33"
+            min="0"
+            max="39"
           />
         </div>
       </div>

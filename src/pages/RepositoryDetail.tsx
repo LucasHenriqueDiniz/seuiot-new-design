@@ -78,27 +78,23 @@ const initialOperations: OperationConfig[] = [
   {
     id: "joystick_y_001",
     name: "Joystick Y",
-    pinName: "GPIO_33",
+    pinNumber: 33,
     bitWidth: 12,
     attenuation: 0,
     sampleCount: 64,
     period: 1000,
-    currentValue: 33,
     type: "analog",
-    status: "active",
     description: "Controle de entrada analógica para joystick Y",
   },
   {
     id: "temp_sensor_002",
     name: "Sensor de Temperatura",
-    pinName: "GPIO_25",
+    pinNumber: 25,
     bitWidth: 12,
     attenuation: 3,
     sampleCount: 128,
     period: 2000,
-    currentValue: 67,
     type: "analog",
-    status: "active",
     description: "Sensor de temperatura ambiente",
   },
 ];
@@ -112,8 +108,6 @@ const initialControls: ControlNewConfig[] = [
     operationMode: "continuous",
     referenceValue: 25.0,
     saveToFlash: true,
-    currentValue: 23.5,
-    status: "active",
     pidKp: 1.0,
     pidKi: 0.1,
     pidKd: 0.01,
@@ -126,8 +120,6 @@ const initialControls: ControlNewConfig[] = [
     operationMode: "continuous",
     referenceValue: 0,
     saveToFlash: false,
-    currentValue: 45.2,
-    status: "active",
   },
 ];
 
@@ -143,8 +135,6 @@ const initialInstrumentations: InstrumentationConfig[] = [
     rangeMax: 30,
     linearScale: 1.0,
     linearOffset: 0,
-    currentValue: 24.5,
-    status: "active",
   },
 ];
 

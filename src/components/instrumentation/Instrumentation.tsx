@@ -44,8 +44,6 @@ export interface InstrumentationConfig {
   linearOffset?: number;
   // Quantification settings
   quantificationLevels?: number;
-  currentValue: number;
-  status: "active" | "inactive" | "alarm";
 }
 
 interface InstrumentationProps {
@@ -61,19 +59,6 @@ export function Instrumentation({
   onDelete,
   onViewChart,
 }: InstrumentationProps) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-      case "inactive":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
-      case "alarm":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
-    }
-  };
-
   const getComparatorIcon = () => {
     switch (instrumentation.comparatorType) {
       case "greater":
@@ -109,9 +94,6 @@ export function Instrumentation({
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Badge className={getStatusColor(instrumentation.status)}>
-              {instrumentation.status}
-            </Badge>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm">
@@ -221,15 +203,6 @@ export function Instrumentation({
             </div>
           )
         )}
-
-        <div className="border-t pt-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Valor Atual:</span>
-            <span className="text-lg font-bold text-primary">
-              {instrumentation.currentValue}
-            </span>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
@@ -258,8 +231,6 @@ export function InstrumentationForm({
       linearScale: 1,
       linearOffset: 0,
       quantificationLevels: 8,
-      currentValue: 0,
-      status: "inactive",
     },
   );
 
