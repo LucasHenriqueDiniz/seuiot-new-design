@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Database,
   Cpu,
   Activity,
@@ -22,7 +28,14 @@ import {
   Pause,
   RefreshCw,
   AlertTriangle,
+  Plus,
 } from "lucide-react";
+import {
+  Control,
+  ControlForm,
+  ControlChart,
+  ControlConfig,
+} from "@/components/controls/Control";
 
 // Mock data - in real app this would come from API
 const repositoryData = {
@@ -62,11 +75,94 @@ const mockOperations = [
   },
 ];
 
+const initialControls: ControlConfig[] = [
+  {
+    id: "joystick_y_001",
+    name: "Joystick Y",
+    pinName: "GPIO_33",
+    bitWidth: 12,
+    attenuation: 0,
+    sampleCount: 64,
+    period: 1000,
+    currentValue: 33,
+    type: "analog",
+    status: "active",
+  },
+  {
+    id: "temp_control_002",
+    name: "Controle de Temperatura",
+    pinName: "GPIO_25",
+    bitWidth: 12,
+    attenuation: 3,
+    sampleCount: 128,
+    period: 2000,
+    currentValue: 67,
+    type: "analog",
+    status: "active",
+  },
+  {
+    id: "pump_speed_003",
+    name: "Velocidade da Bomba",
+    pinName: "GPIO_18",
+    bitWidth: 8,
+    attenuation: 0,
+    sampleCount: 32,
+    period: 500,
+    currentValue: 85,
+    type: "pwm",
+    status: "inactive",
+  },
+];
+
 export default function RepositoryDetail() {
   const { id } = useParams();
-  const [selectedDevice, setSelectedDevice] = useState("all");
+  const [searchParams] = useSearchParams();
+  const [selectedDevice, setSelectedDevice] = useState(
+    searchParams.get("device") || "all",
+  );
+  const [controls, setControls] = useState<ControlConfig[]>(initialControls);
+  const [showControlForm, setShowControlForm] = useState(false);
+  const [showControlChart, setShowControlChart] = useState(false);
+  const [editingControl, setEditingControl] = useState<ControlConfig | null>(
+    null,
+  );
+  const [chartControl, setChartControl] = useState<ControlConfig | null>(null);
 
   const repository = repositoryData.example1; // In real app, fetch by id
+
+  const handleSaveControl = (control: ControlConfig) => {
+    if (editingControl) {
+      setControls(controls.map((c) => (c.id === control.id ? control : c)));
+    } else {
+      setControls([...controls, control]);
+    }
+    setShowControlForm(false);
+    setEditingControl(null);
+  };
+
+  const handleEditControl = (control: ControlConfig) => {
+    setEditingControl(control);
+    setShowControlForm(true);
+  };
+
+  const handleDeleteControl = (id: string) => {
+    setControls(controls.filter((c) => c.id !== id));
+  };
+
+  const handleViewChart = (control: ControlConfig) => {
+    setChartControl(control);
+    setShowControlChart(true);
+  };
+
+  const closeControlForm = () => {
+    setShowControlForm(false);
+    setEditingControl(null);
+  };
+
+  const closeControlChart = () => {
+    setShowControlChart(false);
+    setChartControl(null);
+  };
 
   return (
     <Layout title={repository.name}>
@@ -247,55 +343,84 @@ export default function RepositoryDetail() {
 
           {/* Control Tab */}
           <TabsContent value="control" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Controles Remotos</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span>Bomba Principal</span>
-                    <Button size="sm">Ligar</Button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Sistema de Ventilação</span>
-                    <Button variant="outline" size="sm">
-                      Desligar
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Alarme de Temperatura</span>
-                    <Button variant="destructive" size="sm">
-                      Ativo
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Configurações Rápidas</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">
-                      Intervalo de Coleta (min)
-                    </label>
-                    <Select defaultValue="5">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">1 minuto</SelectItem>
-                        <SelectItem value="5">5 minutos</SelectItem>
-                        <SelectItem value="15">15 minutos</SelectItem>
-                        <SelectItem value="30">30 minutos</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">
+                  Controles de Dispositivo
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Configure e monitore os controles analógicos e digitais
+                </p>
+              </div>
+              <Button onClick={() => setShowControlForm(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Controle
+              </Button>
             </div>
+
+            {controls.length === 0 ? (
+              <Card>
+                <CardContent className="py-8">
+                  <div className="text-center">
+                    <Settings className="h-8 w-8 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-lg font-semibold mb-2">
+                      Nenhum controle configurado
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      Crie seu primeiro controle para começar a monitorar
+                      dispositivos
+                    </p>
+                    <Button onClick={() => setShowControlForm(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Criar Primeiro Controle
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {controls.map((control) => (
+                  <Control
+                    key={control.id}
+                    control={control}
+                    onEdit={handleEditControl}
+                    onDelete={handleDeleteControl}
+                    onViewChart={handleViewChart}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Control Form Dialog */}
+            <Dialog open={showControlForm} onOpenChange={setShowControlForm}>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingControl ? "Editar Controle" : "Novo Controle"}
+                  </DialogTitle>
+                </DialogHeader>
+                <ControlForm
+                  control={editingControl}
+                  onSave={handleSaveControl}
+                  onCancel={closeControlForm}
+                />
+              </DialogContent>
+            </Dialog>
+
+            {/* Control Chart Dialog */}
+            <Dialog open={showControlChart} onOpenChange={setShowControlChart}>
+              <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                  <DialogTitle>Monitoramento de Controle</DialogTitle>
+                </DialogHeader>
+                {chartControl && (
+                  <ControlChart
+                    control={chartControl}
+                    onClose={closeControlChart}
+                  />
+                )}
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           {/* Charts Tab */}
