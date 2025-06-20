@@ -67,13 +67,13 @@ export function Header({
             <h1 className="text-xl font-semibold text-white">Seu IoT</h1>
           </div>
 
-        <div className="hidden sm:block">
-          <span className="text-blue-200">|</span>
-          <span className="ml-3 text-lg font-medium text-white">
-            {title}
-          </span>
+          <div className="hidden sm:block">
+            <span className="text-blue-200">|</span>
+            <span className="ml-3 text-lg font-medium text-white">
+              {title}
+            </span>
+          </div>
         </div>
-      </div>
 
       <div className="flex items-center space-x-2">
         {/* Language Selector */}
