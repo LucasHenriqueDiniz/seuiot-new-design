@@ -202,6 +202,16 @@ export default function RepositoryDetail() {
               <RefreshCw className="h-4 w-4 mr-2" />
               Sincronizar
             </Button>
+            {selectedDevice !== "all" && (
+              <Badge variant="outline" className="ml-2">
+                Dispositivo:{" "}
+                {
+                  repository.devices.find(
+                    (d) => d.id.toString() === selectedDevice,
+                  )?.name
+                }
+              </Badge>
+            )}
           </div>
         </div>
 
