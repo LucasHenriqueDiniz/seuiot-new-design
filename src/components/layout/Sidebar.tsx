@@ -18,7 +18,7 @@ import {
   Pin,
   X
 } from "lucide-react";
-import { ReactNode, useState } from "react";
+import React, { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 interface SidebarProps {
@@ -149,7 +149,18 @@ export function Sidebar({
   };
 
   const handleDeviceSelect = (deviceId: string) => {
-    onSelectDevice(deviceId);
+    // Encontrar o repositório ao qual o dispositivo pertence
+    const result = getDeviceFromRepositories(deviceId);
+    
+    if (result) {
+      // Se o repositório não for o mesmo que já está selecionado, selecione-o primeiro
+      if (selectedRepository !== result.repo.id) {
+        onSelectRepository(result.repo.id);
+      }
+      onSelectDevice(deviceId);
+      navigate(`/devices/${deviceId}`);
+    }
+    
     onClose();
   };
 
@@ -168,28 +179,45 @@ export function Sidebar({
     return repositories.find((r) => r.id === selectedRepository)?.name;
   };
 
+  const getSelectedDeviceInfo = () => {
+    if (!selectedDevice) return null;
+    
+    // Primeiro, tenta encontrar o dispositivo no repositório selecionado
+    if (selectedRepository) {
+      const repo = repositories.find((r) => r.id === selectedRepository);
+      const device = repo?.devices.find((d) => d.id === selectedDevice);
+      if (device) {
+        return { repo, device };
+      }
+    }
+    
+    // Se não encontrar, busca em todos os repositórios
+    return getDeviceFromRepositories(selectedDevice);
+  };
+
   const getSelectedDeviceName = () => {
-    if (!selectedDevice || !selectedRepository) return null;
-    const repo = repositories.find((r) => r.id === selectedRepository);
-    return repo?.devices.find((d) => d.id === selectedDevice)?.name;
+    const deviceInfo = getSelectedDeviceInfo();
+    return deviceInfo?.device?.name || null;
   };
 
   const getSelectedDeviceModel = () => {
-    if (!selectedDevice || !selectedRepository) return null;
-    const repo = repositories.find((r) => r.id === selectedRepository);
-    return repo?.devices.find((d) => d.id === selectedDevice)?.model;
+    const deviceInfo = getSelectedDeviceInfo();
+    return deviceInfo?.device?.model || null;
   };
 
   const getSelectedDeviceIp = () => {
-    if (!selectedDevice || !selectedRepository) return null;
-    const repo = repositories.find((r) => r.id === selectedRepository);
-    return repo?.devices.find((d) => d.id === selectedDevice)?.ip;
+    const deviceInfo = getSelectedDeviceInfo();
+    return deviceInfo?.device?.ip || null;
   };
 
   const getSelectedDeviceLastMessage = () => {
-    if (!selectedDevice || !selectedRepository) return null;
-    const repo = repositories.find((r) => r.id === selectedRepository);
-    return repo?.devices.find((d) => d.id === selectedDevice)?.lastMessage;
+    const deviceInfo = getSelectedDeviceInfo();
+    return deviceInfo?.device?.lastMessage || null;
+  };
+  
+  const getSelectedDeviceStatus = () => {
+    const deviceInfo = getSelectedDeviceInfo();
+    return deviceInfo?.device?.status || null;
   };
 
   const getAllDevices = () => {
@@ -204,6 +232,49 @@ export function Sidebar({
     const repo = repositories.find((r) => r.id === repoId);
     return repo?.devices[0]?.id || null;
   };
+
+  const getDeviceFromRepositories = (deviceId: string | null) => {
+    if (!deviceId) return null;
+    
+    for (const repo of repositories) {
+      const device = repo.devices.find(d => d.id === deviceId);
+      if (device) {
+        return { repo, device };
+      }
+    }
+    return null;
+  };
+
+  // Sincronizar a seleção de repositório e dispositivo
+  useEffect(() => {
+    if (selectedDevice) {
+      const deviceInfo = getDeviceFromRepositories(selectedDevice);
+      
+      // Se encontrou o dispositivo e o repositório atual não é o dono do dispositivo
+      if (deviceInfo && (!selectedRepository || deviceInfo.repo.id !== selectedRepository)) {
+        // Atualiza para o repositório correto
+        onSelectRepository(deviceInfo.repo.id);
+      } else if (!deviceInfo && selectedDevice) {
+        // Dispositivo não existe em nenhum repositório
+        onSelectDevice(null);
+      }
+    }
+  }, [selectedDevice, selectedRepository, onSelectRepository, onSelectDevice]);
+
+  // Log para depuração
+  useEffect(() => {
+    console.log("Dispositivo selecionado:", selectedDevice);
+    console.log("Repositório selecionado:", selectedRepository);
+    
+    if (selectedDevice) {
+      const deviceInfo = getDeviceFromRepositories(selectedDevice);
+      console.log("Informações do dispositivo:", deviceInfo);
+      
+      if (deviceInfo && deviceInfo.repo.id !== selectedRepository) {
+        console.warn("Dispositivo pertence a um repositório diferente!");
+      }
+    }
+  }, [selectedDevice, selectedRepository]);
 
   return (
     <>
@@ -331,7 +402,7 @@ export function Sidebar({
                                       "flex items-center ml-6 cursor-pointer rounded-md px-2 py-1 text-xs",
                                       isCollapsed && "ml-2 justify-center",
                                       selectedDevice === defaultDevice
-                                        ? "bg-sidebar-accent/80 text-sidebar-foreground"
+                                        ? "bg-primary/10 text-primary border border-primary/30 shadow-sm"
                                         : "hover:bg-sidebar-accent/50 text-sidebar-foreground/80"
                                     )}
                                     onClick={() => {
@@ -339,8 +410,15 @@ export function Sidebar({
                                       handleDeviceSelect(defaultDevice);
                                     }}
                                   >
-                                    <Cpu className="h-3 w-3 mr-1.5 text-primary/80 min-w-3" />
-                                    <span className={cn("truncate", isCollapsed && "hidden")}>
+                                    <Cpu className={cn(
+                                      "h-3 w-3 mr-1.5 min-w-3",
+                                      selectedDevice === defaultDevice ? "text-primary" : "text-primary/80"
+                                    )} />
+                                    <span className={cn(
+                                      "truncate", 
+                                      isCollapsed && "hidden",
+                                      selectedDevice === defaultDevice && "font-medium"
+                                    )}>
                                       {repo.devices[0].name}
                                     </span>
                                     <span
@@ -355,7 +433,15 @@ export function Sidebar({
                                   </div>
                                 </TooltipTrigger>
                                 {isCollapsed && (
-                                  <TooltipContent side="right">{repo.devices[0].name}</TooltipContent>
+                                  <TooltipContent side="right">
+                                    <div className="space-y-1">
+                                      <p className="font-medium">{repo.devices[0].name}</p>
+                                      <p className="text-xs">Status: {repo.devices[0].status}</p>
+                                      {selectedDevice === defaultDevice && (
+                                        <p className="text-xs font-medium text-primary">✓ Dispositivo selecionado</p>
+                                      )}
+                                    </div>
+                                  </TooltipContent>
                                 )}
                               </Tooltip>
                             )}
@@ -582,7 +668,7 @@ export function Sidebar({
                       {isCollapsed && (
                         <TooltipContent side="right">
                           <div>
-                            <p>Lorem ipsum dolor sit amet</p>
+                            <p className="font-medium">{getSelectedDeviceName()}</p>
                             <p className="text-xs">IP: {getSelectedDeviceIp()}</p>
                             <p className="text-xs">Última mensagem: {getSelectedDeviceLastMessage()}</p>
                             <p className="text-xs">Modelo: {getSelectedDeviceModel()}</p>
@@ -615,21 +701,30 @@ export function Sidebar({
                 {/* Device List */}
                 {devicesExpanded && !selectedDevice && (
                   <div className="mt-1 ml-6 space-y-1">
-                    {getAllDevices().map((device) => (
-                      <Tooltip key={device.id}>
+                    {getAllDevices().map((device) => (                              <Tooltip key={device.id}>
                         <TooltipTrigger asChild>
                           <button
                             onClick={() => handleDeviceSelect(device.id)}
                             className={cn(
                               "flex w-full items-center rounded-md px-3 py-1.5 text-sm transition-colors",
-                              "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                              "text-sidebar-foreground/80",
+                              selectedDevice === device.id 
+                                ? "bg-primary/10 text-primary border border-primary/30 shadow-sm" 
+                                : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sidebar-foreground/80",
                               isCollapsed && "justify-center px-2"
                             )}
                           >
                             <div className={cn("flex items-center", isCollapsed && "justify-center")}>
-                              <Cpu className={cn("h-3.5 w-3.5 min-w-3.5", !isCollapsed && "mr-2", "text-primary/80", isCollapsed && "mr-0")} />
-                              <span className={cn("truncate", isCollapsed && "hidden")}>{device.name}</span>
+                              <Cpu className={cn(
+                                "h-3.5 w-3.5 min-w-3.5", 
+                                !isCollapsed && "mr-2", 
+                                selectedDevice === device.id ? "text-primary" : "text-primary/80", 
+                                isCollapsed && "mr-0"
+                              )} />
+                              <span className={cn(
+                                "truncate", 
+                                isCollapsed && "hidden", 
+                                selectedDevice === device.id && "font-medium"
+                              )}>{device.name}</span>
                               <span
                                 className={cn(
                                   !isCollapsed ? "ml-2" : "ml-1", 
@@ -641,7 +736,10 @@ export function Sidebar({
                               />
                             </div>
                             {!isCollapsed && (
-                              <span className="text-xs text-muted-foreground ml-2">
+                              <span className={cn(
+                                "text-xs ml-2",
+                                selectedDevice === device.id ? "text-primary/80" : "text-muted-foreground"
+                              )}>
                                 {device.model}
                               </span>
                             )}
@@ -653,6 +751,9 @@ export function Sidebar({
                               <p className="font-medium">{device.name}</p>
                               <p className="text-xs">{device.model}</p>
                               <p className="text-xs">{device.status}</p>
+                              {selectedDevice === device.id && (
+                                <p className="text-xs font-medium text-primary">✓ Dispositivo selecionado</p>
+                              )}
                             </div>
                           </TooltipContent>
                         )}
@@ -705,15 +806,24 @@ export function Sidebar({
             {selectedDevice ? (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="rounded-lg bg-primary/10 p-3 relative">
+                  <div className="rounded-lg bg-primary/10 p-3 relative border border-primary/30 shadow-sm hover:bg-primary/15 transition-colors">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <p className="text-xs font-medium text-foreground">
-                          {getSelectedDeviceName()}
-                        </p>
+                        <div className="flex items-center space-x-2">
+                          <Cpu className="h-4 w-4 text-primary" />
+                          <p className="text-sm font-medium text-primary truncate max-w-[120px]">
+                            {getSelectedDeviceName()}
+                          </p>
+                          <Badge 
+                            variant={getSelectedDeviceStatus() === "Online" ? "success" : "destructive"}
+                            className="h-5 ml-auto"
+                          >
+                            {getSelectedDeviceStatus()}
+                          </Badge>
+                        </div>
                         {!isCollapsed && (
                           <>
-                            <div className="mt-2 space-y-1">
+                            <div className="mt-3 space-y-2">
                               <div className="flex items-center justify-between text-xs">
                                 <span className="text-muted-foreground">Modelo:</span>
                                 <span className="font-medium">
@@ -731,14 +841,17 @@ export function Sidebar({
                                 </span>
                               </div>
                             </div>
-                            <div className="mt-2 text-xs">
-                              <span className="text-muted-foreground">Repositório: </span>
-                              <Link
-                                to={`/repositories/${selectedRepository}`}
-                                className="text-primary hover:underline"
-                              >
-                                {getSelectedRepositoryName()}
-                              </Link>
+                            <div className="mt-3 pt-2 border-t border-primary/10 text-xs">
+                              <div className="flex items-center">
+                                <FolderOpen className="h-3 w-3 text-primary/70 mr-1.5" />
+                                <span className="text-muted-foreground">Repositório: </span>
+                                <Link
+                                  to={`/repositories/${selectedRepository}`}
+                                  className="text-primary hover:underline ml-1"
+                                >
+                                  {getSelectedRepositoryName()}
+                                </Link>
+                              </div>
                             </div>
                           </>
                         )}
@@ -758,11 +871,31 @@ export function Sidebar({
                 </TooltipTrigger>
                 {isCollapsed && (
                   <TooltipContent side="right">
-                    <div className="space-y-1 max-w-xs">
-                      <p className="font-medium">{getSelectedDeviceName()}</p>
-                      <p className="text-xs">Modelo: {getSelectedDeviceModel()}</p>
-                      <p className="text-xs">IP: {getSelectedDeviceIp()}</p>
-                      <p className="text-xs">Repo: {getSelectedRepositoryName()}</p>
+                    <div className="space-y-2 max-w-xs">
+                      <div className="flex items-center space-x-2">
+                        <Cpu className="h-4 w-4 text-primary" />
+                        <p className="font-medium text-primary">{getSelectedDeviceName()}</p>
+                      </div>
+                      <div className="text-xs space-y-1">
+                        <p><span className="text-muted-foreground">Modelo:</span> <span className="font-medium">{getSelectedDeviceModel()}</span></p>
+                        <p><span className="text-muted-foreground">IP:</span> <span className="font-medium">{getSelectedDeviceIp()}</span></p>
+                        <p><span className="text-muted-foreground">Status:</span> <span className={cn(
+                            "font-medium",
+                            getSelectedDeviceStatus() === "Online"
+                            ? "text-green-600"
+                            : "text-red-600"
+                          )}>
+                          {getSelectedDeviceStatus()}
+                        </span></p>
+                        <p><span className="text-muted-foreground">Repositório:</span> <span className="font-medium">{getSelectedRepositoryName()}</span></p>
+                      </div>
+                      <Link
+                        to={`/devices/${selectedDevice}`}
+                        className="text-primary hover:underline text-xs flex items-center"
+                      >
+                        <span>Ver detalhes completos</span>
+                        <ChevronRight className="h-3 w-3 ml-1" />
+                      </Link>
                     </div>
                   </TooltipContent>
                 )}
@@ -770,13 +903,20 @@ export function Sidebar({
             )            : selectedRepository ? (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="rounded-lg bg-primary/10 p-3 relative">
+                  <div className="rounded-lg bg-primary/10 p-3 relative border border-primary/30 shadow-sm hover:bg-primary/15 transition-colors">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <p className="text-xs font-medium text-foreground">
-                          {getSelectedRepositoryName()}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <div className="flex items-center gap-2">
+                          {repositories.find(r => r.id === selectedRepository)?.icon ? (
+                            <span className="text-base text-primary">{repositories.find(r => r.id === selectedRepository)?.icon}</span>
+                          ) : (
+                            <FolderOpen className="h-4 w-4 text-primary" />
+                          )}
+                          <p className="text-sm font-medium text-primary">
+                            {getSelectedRepositoryName()}
+                          </p>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1.5">
                           {
                             repositories.find((r) => r.id === selectedRepository)
                               ?.devices.length
@@ -792,9 +932,14 @@ export function Sidebar({
                                 <button
                                   key={device.id}
                                   onClick={() => handleDeviceSelect(device.id)}
-                                  className="rounded bg-sidebar-accent/50 px-1.5 py-0.5 text-xs hover:bg-sidebar-accent"
+                                  className={cn(
+                                    "rounded px-1.5 py-0.5 text-xs",
+                                    selectedDevice === device.id
+                                      ? "bg-primary/20 text-primary border border-primary/30"
+                                      : "bg-sidebar-accent/50 hover:bg-sidebar-accent"
+                                  )}
                                 >
-                                  {device.name}
+                                  {selectedDevice === device.id && "✓ "}{device.name}
                                 </button>
                               ))}
                             {(
